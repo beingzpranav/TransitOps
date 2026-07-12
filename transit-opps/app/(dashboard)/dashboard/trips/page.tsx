@@ -25,9 +25,10 @@ function MiniETA({ actualStartTime, plannedDistance }: { actualStartTime?: strin
 
   useEffect(() => {
     if (!actualStartTime) return;
+    const startTimeStr = actualStartTime;
 
     function update() {
-      const elapsedMs = Date.now() - new Date(actualStartTime).getTime();
+      const elapsedMs = Date.now() - new Date(startTimeStr).getTime();
       const elapsedH = elapsedMs / (1000 * 60 * 60);
       const covered = elapsedH * 60; // Assumed 60 km/h average speed
       const remaining = plannedDistance - covered;

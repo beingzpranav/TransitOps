@@ -18,7 +18,7 @@ export interface Trip {
   fuelConsumed?: number;
   revenuePerTrip?: number;
   vehicle?: { id: string; registrationNumber: string; name: string };
-  driver?: { id: string; name: string; licenseNumber: string };
+  driver?: { id: string; name: string; licenseNumber: string; licenseCategory?: string };
   createdBy?: { id: string; name: string; email: string };
   fuelLogs?: { id: string; cost: number; liters: number }[];
   createdAt: string;

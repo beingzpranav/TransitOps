@@ -43,17 +43,6 @@ export default function LoginPage() {
     }
   }
 
-  function fillDemo(role: string) {
-    const creds: Record<string, { email: string; password: string }> = {
-      manager: { email: 'manager@transitops.com', password: 'Password123!' },
-      dispatcher: { email: 'dispatch@transitops.com', password: 'Password123!' },
-      safety: { email: 'safety@transitops.com', password: 'Password123!' },
-      finance: { email: 'finance@transitops.com', password: 'Password123!' },
-    };
-    const c = creds[role];
-    if (c) { setEmail(c.email); setPassword(c.password); }
-  }
-
   return (
     <div className="min-h-screen flex" style={{ background: 'linear-gradient(135deg, hsl(222 47% 8%) 0%, hsl(222 47% 14%) 100%)' }}>
       {/* Left Panel */}
@@ -160,29 +149,6 @@ export default function LoginPage() {
                 {loading ? 'Signing in...' : 'Sign in'}
               </Button>
             </form>
-
-            {/* Demo credential quick-fill */}
-            <div className="mt-6 pt-6 border-t border-gray-100">
-              <p className="text-xs text-gray-400 mb-3 font-medium uppercase tracking-wide">Quick Demo Access</p>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { key: 'manager', label: '🚚 Fleet Manager' },
-                  { key: 'dispatcher', label: '📋 Dispatcher' },
-                  { key: 'safety', label: '🛡️ Safety Officer' },
-                  { key: 'finance', label: '💰 Financial Analyst' },
-                ].map((r) => (
-                  <button
-                    key={r.key}
-                    type="button"
-                    onClick={() => fillDemo(r.key)}
-                    className="text-left px-3 py-2 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50 text-xs text-gray-600 hover:text-blue-700 transition-colors"
-                  >
-                    {r.label}
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs text-gray-400 mt-2 text-center">All demo passwords: <code className="bg-gray-100 px-1 rounded">Password123!</code></p>
-            </div>
           </div>
         </div>
       </div>
