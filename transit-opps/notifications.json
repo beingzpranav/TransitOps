@@ -1,20 +1,26 @@
 [
   {
-    "id": "pssr5dk",
-    "message": "Trip from Miami, FL to Orlando, FL has been completed successfully.",
-    "triggerEvent": "Trip Completed",
-    "createdAt": "2026-07-12T09:34:51.743Z"
-  },
-  {
-    "id": "lwzq5c0",
-    "message": "Trip from Miami, FL to Orlando, FL has been dispatched.",
+    "id": "rhkj6v7",
+    "message": "Trip from Jaipur, Jaipur Municipal Corporation, Rajasthan, India to New Jalpaiguri Junction, Agrani Sangha Maidan Road, West Bengal, India has been dispatched.",
     "triggerEvent": "Trip Dispatched",
-    "createdAt": "2026-07-12T09:33:01.657Z"
+    "createdAt": "2026-07-12T09:47:46.951Z"
   },
   {
-    "id": "y7ot9lq",
-    "message": "Trip from Jaipur, Jaipur Municipal Corporation, Rajasthan, India to Dharavi, Maharashtra, India has been cancelled.",
+    "id": "2gwqxce",
+    "message": "Trip from Delhi, India to Jaipur, Jaipur Municipal Corporation, Rajasthan, India has been cancelled.",
     "triggerEvent": "Trip Cancelled",
-    "createdAt": "2026-07-12T09:32:26.594Z"
+    "createdAt": "2026-07-12T09:47:20.533Z"
+  },
+  {
+    "id": "tr38dxt",
+    "message": "Trip from Delhi, India to Jaipur, Jaipur Municipal Corporation, Rajasthan, India has been dispatched.",
+    "triggerEvent": "Trip Dispatched",
+    "createdAt": "2026-07-12T09:44:16.314Z"
+  },
+  {
+    "id": "vcr9jts",
+    "message": "Trip from Delhi, DL to Jaipur, RJ has been dispatched.",
+    "triggerEvent": "Trip Dispatched",
+    "createdAt": "2026-07-12T09:41:19.758Z"
   }
 ]

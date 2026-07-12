@@ -30,12 +30,16 @@ function DriverForm({
   onSubmit: (data: Partial<Driver>) => void;
   loading: boolean;
 }) {
+  const initialContactNumber = driver?.contactNumber
+    ? (driver.contactNumber.startsWith('+91') ? driver.contactNumber.slice(3) : driver.contactNumber)
+    : '';
+
   const [form, setForm] = useState({
     name: driver?.name ?? '',
     licenseNumber: driver?.licenseNumber ?? '',
     licenseCategory: driver?.licenseCategory ?? '',
     licenseExpiry: driver?.licenseExpiry?.split('T')[0] ?? '',
-    contactNumber: driver?.contactNumber ?? '',
+    contactNumber: initialContactNumber,
     email: driver?.email ?? '',
     safetyScore: driver?.safetyScore?.toString() ?? '',
     status: (driver?.status as string) ?? 'Available',
@@ -45,6 +49,7 @@ function DriverForm({
     e.preventDefault();
     onSubmit({
       ...form,
+      contactNumber: `+91${form.contactNumber}`,
       status: form.status as Driver['status'],
       safetyScore: form.safetyScore ? parseFloat(form.safetyScore) : undefined,
       email: form.email || undefined,
@@ -60,16 +65,25 @@ function DriverForm({
         </div>
         <div>
           <Label htmlFor="contact" className="form-label">Contact Number *</Label>
-          <Input
-            id="contact"
-            value={form.contactNumber}
-            onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
-            placeholder="+91 98765 43210"
-            pattern="^\+91.*"
-            title="Phone number must start with +91"
-            required
-            className="mt-1"
-          />
+          <div className="flex rounded-lg border border-input bg-transparent mt-1 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
+            <span className="inline-flex items-center px-2.5 text-sm text-gray-500 bg-gray-50/50 border-r border-input rounded-l-lg select-none">
+              +91
+            </span>
+            <input
+              id="contact"
+              type="text"
+              value={form.contactNumber}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                setForm({ ...form, contactNumber: val });
+              }}
+              placeholder="9876543210"
+              pattern="[0-9]{10}"
+              title="Phone number must be a 10-digit number"
+              required
+              className="h-8 w-full min-w-0 bg-transparent px-2.5 py-1 text-base transition-colors outline-none md:text-sm placeholder:text-muted-foreground"
+            />
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
