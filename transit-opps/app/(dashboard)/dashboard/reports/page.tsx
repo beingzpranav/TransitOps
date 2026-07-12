@@ -1,405 +1,218 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BarChart3, Download, TrendingUp, DollarSign, Activity, Percent } from 'lucide-react';
+import { Download, TrendingUp, Activity, DollarSign, Percent } from 'lucide-react';
 import { useReport } from '@/hooks/useReports';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { downloadCsv } from '@/lib/api';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell, Legend,
 } from 'recharts';
-
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#6366f1', '#ef4444', '#8b5cf6'];
 
 interface DateRange { from: string; to: string }
 
-function ChartCard({ title, icon: Icon, children, reportType, dateRange }: {
-  title: string;
-  icon: React.ElementType;
-  children: React.ReactNode;
-  reportType: string;
-  dateRange: DateRange;
-}) {
-  const [exporting, setExporting] = useState(false);
-
-  async function handleExport() {
-    setExporting(true);
-    try {
-      const params = new URLSearchParams({ type: reportType, format: 'csv' });
-      if (dateRange.from) params.set('from', dateRange.from);
-      if (dateRange.to) params.set('to', dateRange.to);
-      await downloadCsv(`/reports?${params.toString()}`, `${reportType}_${new Date().toISOString().split('T')[0]}.csv`);
-    } finally {
-      setExporting(false);
-    }
-  }
-
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-[#ff385c]/10">
-            <Icon className="w-4 h-4 text-[#ff385c]" />
-          </div>
-          <h3 className="font-semibold text-gray-900">{title}</h3>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExport}
-          disabled={exporting}
-          id={`export-${reportType}`}
-          className="text-xs"
-        >
-          <Download className="w-3.5 h-3.5 mr-1.5" />
-          {exporting ? 'Exporting...' : 'Export CSV'}
-        </Button>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function FuelEfficiencyChart({ dateRange }: { dateRange: DateRange }) {
-  const { data, isLoading } = useReport('fuel_efficiency', dateRange.from ? dateRange : undefined);
-  const chartData = (data?.data as Array<{ vehicleName: string; efficiency: number | null; totalDistance: number; totalFuel: number; registrationNumber: string }> | undefined) ?? [];
-
-  if (isLoading) return <div className="h-64 animate-pulse bg-gray-100 rounded-xl" />;
-  if (chartData.length === 0) return <div className="h-64 flex items-center justify-center text-gray-400 text-sm">No data available</div>;
-
-  return (
-    <>
-      <ResponsiveContainer width="100%" height={280}>
-        <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis dataKey="registrationNumber" tick={{ fontSize: 11 }} />
-          <YAxis tick={{ fontSize: 11 }} label={{ value: 'km/L', angle: -90, position: 'insideLeft', offset: 10, style: { fontSize: 11 } }} />
-          <Tooltip formatter={(v: any) => [`${v} km/L`, 'Efficiency']} />
-          <Bar dataKey="efficiency" radius={[4, 4, 0, 0]} fill="#3b82f6" />
-        </BarChart>
-      </ResponsiveContainer>
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full data-table text-sm">
-          <thead><tr>
-            <th className="text-left">Vehicle</th>
-            <th className="text-right">Distance (km)</th>
-            <th className="text-right">Fuel (L)</th>
-            <th className="text-right">Efficiency (km/L)</th>
-          </tr></thead>
-          <tbody>
-            {chartData.map((row, i) => (
-              <tr key={i}>
-                <td>{row.registrationNumber} — {row.vehicleName}</td>
-                <td className="text-right">{row.totalDistance.toLocaleString()}</td>
-                <td className="text-right">{row.totalFuel.toFixed(1)}</td>
-                <td className="text-right font-semibold text-blue-700">{row.efficiency ?? '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
-  );
-}
-
-function OperationalCostChart({ dateRange }: { dateRange: DateRange }) {
-  const { data, isLoading } = useReport('operational_cost', dateRange.from ? dateRange : undefined);
-  const chartData = (data?.data as Array<{ vehicleName: string; registrationNumber: string; fuelCost: number; maintenanceCost: number; expenseCost: number; totalOperationalCost: number }> | undefined) ?? [];
-
-  const pieData = chartData.length > 0 ? [
-    { name: 'Fuel', value: chartData.reduce((s, r) => s + r.fuelCost, 0) },
-    { name: 'Maintenance', value: chartData.reduce((s, r) => s + r.maintenanceCost, 0) },
-    { name: 'Expenses', value: chartData.reduce((s, r) => s + r.expenseCost, 0) },
-  ] : [];
-
-  if (isLoading) return <div className="h-64 animate-pulse bg-gray-100 rounded-xl" />;
-  if (chartData.length === 0) return <div className="h-64 flex items-center justify-center text-gray-400 text-sm">No data available</div>;
-
-  return (
-    <>
-      <div className="grid grid-cols-2 gap-6">
-        <ResponsiveContainer width="100%" height={260}>
-          <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-            <XAxis dataKey="registrationNumber" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 10 }} />
-            <Tooltip formatter={(v: any) => [`₹${Number(v).toFixed(2)}`]} />
-            <Legend iconSize={8} />
-            <Bar dataKey="fuelCost" name="Fuel" stackId="a" fill="#3b82f6" radius={[0, 0, 0, 0]} />
-            <Bar dataKey="maintenanceCost" name="Maintenance" stackId="a" fill="#f59e0b" />
-            <Bar dataKey="expenseCost" name="Expenses" stackId="a" fill="#6366f1" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-        <ResponsiveContainer width="100%" height={260}>
-          <PieChart>
-            <Pie data={pieData} cx="50%" cy="50%" outerRadius={90} dataKey="value" label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}>
-              {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-            </Pie>
-            <Tooltip formatter={(v: any) => [`₹${Number(v).toFixed(2)}`]} />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full data-table text-sm">
-          <thead><tr>
-            <th className="text-left">Vehicle</th>
-            <th className="text-right">Fuel (₹)</th>
-            <th className="text-right">Maintenance (₹)</th>
-            <th className="text-right">Expenses (₹)</th>
-            <th className="text-right">Total (₹)</th>
-          </tr></thead>
-          <tbody>
-            {chartData.map((row, i) => (
-              <tr key={i}>
-                <td>{row.registrationNumber} — {row.vehicleName}</td>
-                <td className="text-right">{row.fuelCost.toFixed(2)}</td>
-                <td className="text-right">{row.maintenanceCost.toFixed(2)}</td>
-                <td className="text-right">{row.expenseCost.toFixed(2)}</td>
-                <td className="text-right font-semibold text-gray-900">₹{row.totalOperationalCost.toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
-  );
-}
-
-function FleetUtilizationChart({ dateRange }: { dateRange: DateRange }) {
-  const { data, isLoading } = useReport('fleet_utilization', dateRange.from ? dateRange : undefined);
-  const chartData = (data?.data as Array<{ date: string; activeTrips: number; utilization: number }> | undefined) ?? [];
-
-  if (isLoading) return <div className="h-64 animate-pulse bg-gray-100 rounded-xl" />;
-  if (chartData.length === 0) return <div className="h-64 flex items-center justify-center text-gray-400 text-sm">No utilization data for the selected period</div>;
-
-  return (
-    <>
-      <ResponsiveContainer width="100%" height={280}>
-        <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-          <YAxis yAxisId="left" tick={{ fontSize: 10 }} domain={[0, 100]} label={{ value: '%', angle: -90, position: 'insideLeft', offset: 10, style: { fontSize: 10 } }} />
-          <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
-          <Tooltip />
-          <Legend iconSize={8} />
-          <Line yAxisId="left" type="monotone" dataKey="utilization" stroke="#3b82f6" strokeWidth={2} dot={false} name="Utilization %" />
-          <Line yAxisId="right" type="monotone" dataKey="activeTrips" stroke="#10b981" strokeWidth={2} dot={false} name="Active Trips" />
-        </LineChart>
-      </ResponsiveContainer>
-      <div className="mt-4 overflow-x-auto max-h-48">
-        <table className="w-full data-table text-sm">
-          <thead><tr>
-            <th className="text-left">Date</th>
-            <th className="text-right">Active Trips</th>
-            <th className="text-right">Utilization %</th>
-          </tr></thead>
-          <tbody>
-            {chartData.map((row, i) => (
-              <tr key={i}>
-                <td>{row.date}</td>
-                <td className="text-right">{row.activeTrips}</td>
-                <td className="text-right font-semibold text-blue-700">{row.utilization}%</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
-  );
-}
-
-function VehicleROIChart() {
-  const { data, isLoading } = useReport('vehicle_roi');
-  const chartData = (data?.data as Array<{ vehicleName: string; registrationNumber: string; roi: number | null; revenue: number; totalCost: number; acquisitionCost: number; tripCount: number }> | undefined) ?? [];
-
-  if (isLoading) return <div className="h-64 animate-pulse bg-gray-100 rounded-xl" />;
-  if (chartData.length === 0) return <div className="h-64 flex items-center justify-center text-gray-400 text-sm">No ROI data available</div>;
-
-  return (
-    <>
-      <ResponsiveContainer width="100%" height={280}>
-        <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis dataKey="registrationNumber" tick={{ fontSize: 11 }} />
-          <YAxis tick={{ fontSize: 11 }} label={{ value: 'ROI %', angle: -90, position: 'insideLeft', style: { fontSize: 11 } }} />
-          <Tooltip formatter={(v: any) => [`${Number(v)?.toFixed(2) ?? 'N/A'}%`, 'ROI']} />
-          <Bar dataKey="roi" radius={[4, 4, 0, 0]}>
-            {chartData.map((entry, i) => (
-              <Cell key={i} fill={(entry.roi ?? 0) >= 0 ? '#10b981' : '#ef4444'} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full data-table text-sm">
-          <thead><tr>
-            <th className="text-left">Vehicle</th>
-            <th className="text-right">Trips</th>
-            <th className="text-right">Revenue (₹)</th>
-            <th className="text-right">Total Cost (₹)</th>
-            <th className="text-right">Acq. Cost (₹)</th>
-            <th className="text-right">ROI %</th>
-          </tr></thead>
-          <tbody>
-            {chartData.map((row, i) => (
-              <tr key={i}>
-                <td>{row.registrationNumber} — {row.vehicleName}</td>
-                <td className="text-right">{row.tripCount}</td>
-                <td className="text-right">{row.revenue.toFixed(2)}</td>
-                <td className="text-right">{row.totalCost.toFixed(2)}</td>
-                <td className="text-right">{row.acquisitionCost.toLocaleString()}</td>
-                <td className={`text-right font-semibold ${(row.roi ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {row.roi != null ? `${row.roi.toFixed(2)}%` : '—'}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
-  );
-}
-
 export default function ReportsPage() {
   const [dateRange, setDateRange] = useState<DateRange>({ from: '', to: '' });
-  const [userRole, setUserRole] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const userData = localStorage.getItem('transitops_user');
-    if (userData) {
-      try {
-        const u = JSON.parse(userData);
-        setUserRole(u.role);
-      } catch {}
-    }
+    setMounted(true);
   }, []);
+  
+  const fuelQuery = useReport('fuel_efficiency', dateRange.from ? dateRange : undefined);
+  const costQuery = useReport('operational_cost', dateRange.from ? dateRange : undefined);
+  const utilQuery = useReport('fleet_utilization', dateRange.from ? dateRange : undefined);
+  const roiQuery = useReport('vehicle_roi');
 
-  const isManager = userRole === 'FLEET_MANAGER';
-  const isFinance = userRole === 'FINANCIAL_ANALYST';
-  const isSafety = userRole === 'SAFETY_OFFICER';
+  // Aggregations
+  const fuelData = (fuelQuery.data?.data as Array<{ efficiency: number | null; totalDistance: number; totalFuel: number; registrationNumber: string }>) || [];
+  const totalDistance = fuelData.reduce((acc, curr) => acc + curr.totalDistance, 0);
+  const totalFuel = fuelData.reduce((acc, curr) => acc + curr.totalFuel, 0);
+  const avgEfficiency = totalFuel > 0 ? (totalDistance / totalFuel).toFixed(1) : '—';
 
-  // Scoped tabs list
-  const showFuel = isManager || isSafety;
-  const showCost = isManager || isFinance;
-  const showUtil = isManager || isSafety;
-  const showRoi = isManager || isFinance;
+  const utilData = (utilQuery.data?.data as Array<{ utilization: number }>) || [];
+  const avgUtil = utilData.length > 0 ? (utilData.reduce((acc, curr) => acc + curr.utilization, 0) / utilData.length).toFixed(0) : '—';
 
-  // Default tab based on role
-  const defaultTab = isFinance ? 'operational_cost' : 'fuel_efficiency';
+  const costData = (costQuery.data?.data as Array<{ vehicleName: string; registrationNumber: string; totalOperationalCost: number }>) || [];
+  const totalOpCost = costData.reduce((acc, curr) => acc + curr.totalOperationalCost, 0).toLocaleString();
 
-  if (!userRole) {
-    return <div className="p-6 text-gray-500">Loading reports configuration...</div>;
-  }
+  const topCostliest = [...costData].sort((a, b) => b.totalOperationalCost - a.totalOperationalCost).slice(0, 3);
+  const maxCost = topCostliest[0]?.totalOperationalCost || 1;
+
+  const roiData = (roiQuery.data?.data as Array<{ registrationNumber: string; roi: number | null; revenue: number; totalCost: number; acquisitionCost: number }>) || [];
+  const totalRevenue = roiData.reduce((acc, curr) => acc + curr.revenue, 0);
+  const totalRoiCost = roiData.reduce((acc, curr) => acc + curr.totalCost, 0);
+  const totalAcq = roiData.reduce((acc, curr) => acc + curr.acquisitionCost, 0);
+  const avgRoi = totalAcq > 0 ? (((totalRevenue - totalRoiCost) / totalAcq) * 100).toFixed(1) : '—';
+
+  const revenueChartData = roiData.filter(d => d.revenue > 0).map(d => ({
+    name: d.registrationNumber,
+    revenue: d.revenue
+  }));
+
+  const handleExport = async (reportType: string) => {
+    const params = new URLSearchParams({ type: reportType, format: 'csv' });
+    if (dateRange.from) params.set('from', dateRange.from);
+    if (dateRange.to) params.set('to', dateRange.to);
+    await downloadCsv(`/reports?${params.toString()}`, `${reportType}_export.csv`);
+  };
+
+  if (!mounted) return null;
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
+    <div className="min-h-[calc(100vh-2rem)] bg-gray-50 text-gray-900 p-8 rounded-2xl shadow-sm font-sans tracking-wide animate-fade-in relative overflow-hidden">
+      
+      {/* Header & Date Filter */}
+      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <BarChart3 className="w-6 h-6 text-[#ff385c]" />
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
             Reports & Analytics
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">Visual analytics and exportable reports</p>
+          <p className="text-sm text-gray-500 mt-1">Real-time insights and fleet performance</p>
         </div>
-
-        {/* Date Range Filter */}
-        <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-4 py-2.5 shadow-sm">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="date-from" className="text-xs text-gray-500 whitespace-nowrap">From</Label>
+        
+        <div className="flex items-center gap-4">
+          <div className="flex gap-3 items-center bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm">
+            <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">From</span>
             <Input
-              id="date-from"
               type="date"
               value={dateRange.from}
               onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
-              className="h-7 text-sm w-36 border-0 px-1 focus-visible:ring-0"
+              className="bg-transparent border-0 h-7 text-sm text-gray-700 w-32 focus-visible:ring-1 focus-visible:ring-gray-200 cursor-pointer"
             />
-          </div>
-          <div className="w-px h-4 bg-gray-200" />
-          <div className="flex items-center gap-2">
-            <Label htmlFor="date-to" className="text-xs text-gray-500 whitespace-nowrap">To</Label>
+            <div className="w-px h-4 bg-gray-200 mx-1"></div>
+            <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">To</span>
             <Input
-              id="date-to"
               type="date"
               value={dateRange.to}
               onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
-              className="h-7 text-sm w-36 border-0 px-1 focus-visible:ring-0"
+              className="bg-transparent border-0 h-7 text-sm text-gray-700 w-32 focus-visible:ring-1 focus-visible:ring-gray-200 cursor-pointer"
             />
           </div>
-          {(dateRange.from || dateRange.to) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs text-gray-400 hover:text-gray-600 px-2"
-              onClick={() => setDateRange({ from: '', to: '' })}
-            >
-              Clear
-            </Button>
-          )}
+          <Button 
+            variant="outline" 
+            onClick={() => handleExport('vehicle_roi')} 
+            className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all shadow-sm"
+          >
+            <Download className="w-4 h-4 mr-2" /> Export CSV
+          </Button>
         </div>
       </div>
 
-      {/* Report Tabs */}
-      <Tabs defaultValue={defaultTab}>
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full max-w-2xl">
-          {showFuel && (
-            <TabsTrigger value="fuel_efficiency" id="tab-fuel-eff" className="text-xs">
-              <TrendingUp className="w-3.5 h-3.5 mr-1.5" /> Fuel Efficiency
-            </TabsTrigger>
-          )}
-          {showCost && (
-            <TabsTrigger value="operational_cost" id="tab-op-cost" className="text-xs">
-              <DollarSign className="w-3.5 h-3.5 mr-1.5" /> Operational Cost
-            </TabsTrigger>
-          )}
-          {showUtil && (
-            <TabsTrigger value="fleet_utilization" id="tab-utilization" className="text-xs">
-              <Activity className="w-3.5 h-3.5 mr-1.5" /> Utilization
-            </TabsTrigger>
-          )}
-          {showRoi && (
-            <TabsTrigger value="vehicle_roi" id="tab-roi" className="text-xs">
-              <Percent className="w-3.5 h-3.5 mr-1.5" /> Vehicle ROI
-            </TabsTrigger>
-          )}
-        </TabsList>
+      {/* KPI Cards */}
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        
+        {/* Fuel Efficiency */}
+        <div className="group bg-white border border-gray-100 border-l-4 border-l-blue-500 rounded-xl p-6 transition-all duration-300 hover:shadow-md hover:border-gray-200 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+              <TrendingUp className="w-4 h-4" />
+            </div>
+            <h3 className="text-[11px] text-gray-500 font-semibold tracking-[0.15em] uppercase">Fuel Efficiency</h3>
+          </div>
+          <div className="text-4xl font-light text-gray-900 tracking-tight">{avgEfficiency} <span className="text-base text-gray-400 ml-1 font-normal">km/l</span></div>
+        </div>
+        
+        {/* Fleet Utilization */}
+        <div className="group bg-white border border-gray-100 border-l-4 border-l-emerald-500 rounded-xl p-6 transition-all duration-300 hover:shadow-md hover:border-gray-200 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+              <Activity className="w-4 h-4" />
+            </div>
+            <h3 className="text-[11px] text-gray-500 font-semibold tracking-[0.15em] uppercase">Fleet Utilization</h3>
+          </div>
+          <div className="text-4xl font-light text-gray-900 tracking-tight">{avgUtil} <span className="text-base text-gray-400 ml-1 font-normal">%</span></div>
+        </div>
 
-        {showFuel && (
-          <TabsContent value="fuel_efficiency" className="mt-6">
-            <ChartCard title="Fuel Efficiency per Vehicle (km/L)" icon={TrendingUp} reportType="fuel_efficiency" dateRange={dateRange}>
-              <FuelEfficiencyChart dateRange={dateRange} />
-            </ChartCard>
-          </TabsContent>
-        )}
+        {/* Operational Cost */}
+        <div className="group bg-white border border-gray-100 border-l-4 border-l-orange-500 rounded-xl p-6 transition-all duration-300 hover:shadow-md hover:border-gray-200 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
+              <DollarSign className="w-4 h-4" />
+            </div>
+            <h3 className="text-[11px] text-gray-500 font-semibold tracking-[0.15em] uppercase">Operational Cost</h3>
+          </div>
+          <div className="text-4xl font-light text-gray-900 tracking-tight">{totalOpCost}</div>
+        </div>
 
-        {showCost && (
-          <TabsContent value="operational_cost" className="mt-6">
-            <ChartCard title="Operational Cost Breakdown" icon={DollarSign} reportType="operational_cost" dateRange={dateRange}>
-              <OperationalCostChart dateRange={dateRange} />
-            </ChartCard>
-          </TabsContent>
-        )}
+        {/* Vehicle ROI */}
+        <div className="group bg-white border border-gray-100 border-l-4 border-l-emerald-400 rounded-xl p-6 transition-all duration-300 hover:shadow-md hover:border-gray-200 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-emerald-50 text-emerald-500 rounded-lg">
+              <Percent className="w-4 h-4" />
+            </div>
+            <h3 className="text-[11px] text-gray-500 font-semibold tracking-[0.15em] uppercase">Vehicle ROI</h3>
+          </div>
+          <div className="text-4xl font-light text-gray-900 tracking-tight">{avgRoi} <span className="text-base text-gray-400 ml-1 font-normal">%</span></div>
+        </div>
+      </div>
 
-        {showUtil && (
-          <TabsContent value="fleet_utilization" className="mt-6">
-            <ChartCard title="Fleet Utilization Over Time" icon={Activity} reportType="fleet_utilization" dateRange={dateRange}>
-              <FleetUtilizationChart dateRange={dateRange} />
-            </ChartCard>
-          </TabsContent>
-        )}
+      {/* Formula */}
+      <div className="relative z-10 text-[11px] text-gray-400 font-mono tracking-widest mb-10 ml-2">
+        ROI = (REVENUE - (MAINTENANCE + FUEL)) / ACQUISITION COST
+      </div>
 
-        {showRoi && (
-          <TabsContent value="vehicle_roi" className="mt-6">
-            <ChartCard title="Vehicle ROI Comparison" icon={Percent} reportType="vehicle_roi" dateRange={dateRange}>
-              <VehicleROIChart />
-            </ChartCard>
-          </TabsContent>
-        )}
-      </Tabs>
+      {/* Charts Area */}
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10">
+        
+        {/* Left Chart: Revenue */}
+        <div className="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm">
+          <h3 className="text-[11px] text-gray-500 font-semibold tracking-[0.15em] mb-8 uppercase">Monthly Revenue</h3>
+          <div className="h-64 w-full">
+            {revenueChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={revenueChartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <XAxis dataKey="name" stroke="#94a3b8" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
+                  <YAxis stroke="#94a3b8" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(value) => value > 0 ? `${value/1000}k` : ''} />
+                  <Tooltip 
+                    cursor={{ fill: '#f8fafc' }} 
+                    contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px', color: '#0f172a', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} 
+                    itemStyle={{ color: '#3b82f6' }} 
+                  />
+                  <Bar dataKey="revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-sm text-gray-400">
+                No revenue data available
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Chart: Top Costliest Vehicles */}
+        <div className="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm">
+          <h3 className="text-[11px] text-gray-500 font-semibold tracking-[0.15em] mb-8 uppercase">Top Costliest Vehicles</h3>
+          <div className="space-y-7 mt-6">
+            {topCostliest.map((vehicle, i) => {
+              const colors = ['bg-rose-400', 'bg-orange-400', 'bg-blue-400'];
+              const width = Math.max((vehicle.totalOperationalCost / maxCost) * 100, 5);
+              return (
+                <div key={vehicle.registrationNumber} className="flex items-center gap-5 group">
+                  <div className="w-20 text-xs text-gray-700 font-medium uppercase tracking-wider">{vehicle.registrationNumber}</div>
+                  <div className="flex-1 bg-gray-100 h-3 rounded-full overflow-hidden flex relative">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-1000 ease-out ${colors[i % colors.length]}`} 
+                      style={{ width: `${width}%` }}
+                    />
+                  </div>
+                  <div className="w-16 text-right text-xs text-gray-500 font-mono group-hover:text-gray-900 transition-colors">
+                    {vehicle.totalOperationalCost.toLocaleString()}
+                  </div>
+                </div>
+              );
+            })}
+            {topCostliest.length === 0 && (
+              <div className="w-full h-full flex items-center justify-center text-sm text-gray-400 mt-10">
+                No cost data available.
+              </div>
+            )}
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }

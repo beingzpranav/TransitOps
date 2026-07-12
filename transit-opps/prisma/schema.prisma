@@ -2,7 +2,7 @@
 // Prisma 6 — generator outputs to app/generated/prisma
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../app/generated/prisma"
 }
 
