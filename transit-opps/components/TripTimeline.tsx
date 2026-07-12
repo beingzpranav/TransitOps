@@ -151,60 +151,62 @@ export function TripTimeline({ tripId, isActive }: { tripId: string; isActive: b
           <p className="text-[10px] text-gray-400 mt-1">Updates will appear once the trip starts and records location pings.</p>
         </div>
       ) : (
-        <div className="relative pl-5 border-l border-gray-200 space-y-4 ml-2.5 py-1">
-          <AnimatePresence initial={false}>
-            {points.map((point, i) => {
-              const isLatest = i === 0; // Checkpoints are sorted descending (latest first)
-              const timeString = new Date(point.capturedAt).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              });
-              const dateString = new Date(point.capturedAt).toLocaleDateString([], {
-                month: 'short',
-                day: 'numeric',
-              });
+        <div className="max-h-[380px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200">
+          <div className="relative pl-5 border-l border-gray-200 space-y-4 ml-2.5 py-1">
+            <AnimatePresence initial={false}>
+              {points.map((point, i) => {
+                const isLatest = i === 0; // Checkpoints are sorted descending (latest first)
+                const timeString = new Date(point.capturedAt).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                });
+                const dateString = new Date(point.capturedAt).toLocaleDateString([], {
+                  month: 'short',
+                  day: 'numeric',
+                });
 
-              return (
-                <motion.div
-                  key={point.hour}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="relative group"
-                >
-                  {/* Indicator bullet */}
-                  <div className="absolute -left-[25px] top-1.5">
-                    {isLatest ? (
-                      <span className="relative flex h-2.5 w-2.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff385c] opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#ff385c]" />
-                      </span>
-                    ) : (
-                      <span className="flex h-2.5 w-2.5 rounded-full bg-gray-300" />
-                    )}
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs font-bold text-gray-900">{timeString}</p>
-                      <p className="text-[10px] text-gray-400 font-medium">({dateString})</p>
-                      {isLatest && (
-                        <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">
-                          Latest checkpoint
+                return (
+                  <motion.div
+                    key={point.hour}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="relative group"
+                  >
+                    {/* Indicator bullet */}
+                    <div className="absolute -left-[25px] top-1.5">
+                      {isLatest ? (
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff385c] opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#ff385c]" />
                         </span>
+                      ) : (
+                        <span className="flex h-2.5 w-2.5 rounded-full bg-gray-300" />
                       )}
                     </div>
-                    <p className="text-[11px] text-gray-600 font-medium mt-0.5">
-                      {resolvedAddresses[`${point.lat},${point.lng}`] || "Resolving address..."}
-                    </p>
-                    <p className="text-[9px] text-gray-400 font-mono">
-                      Lat: {point.lat.toFixed(5)}, Lng: {point.lng.toFixed(5)}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-bold text-gray-900">{timeString}</p>
+                        <p className="text-[10px] text-gray-400 font-medium">({dateString})</p>
+                        {isLatest && (
+                          <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">
+                            Latest checkpoint
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-gray-600 font-medium mt-0.5">
+                        {resolvedAddresses[`${point.lat},${point.lng}`] || "Resolving address..."}
+                      </p>
+                      <p className="text-[9px] text-gray-400 font-mono">
+                        Lat: {point.lat.toFixed(5)}, Lng: {point.lng.toFixed(5)}
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
         </div>
       )}
 

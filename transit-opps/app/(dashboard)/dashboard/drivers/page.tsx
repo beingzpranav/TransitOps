@@ -97,7 +97,7 @@ function DriverForm({
             <SelectTrigger id="license-cat" className="mt-1">
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="min-w-[340px] md:min-w-[380px]">
               <SelectItem value="Class A CDL">Class A CDL — Heavy trucks &amp; combos</SelectItem>
               <SelectItem value="Class B CDL">Class B CDL — Large single vehicles</SelectItem>
               <SelectItem value="Class C CDL">Class C CDL — Hazmat / passenger</SelectItem>

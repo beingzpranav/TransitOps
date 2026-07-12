@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { MapPin, CheckCircle2, Clock, Fuel, TrendingUp, Package, Navigation, CalendarDays } from 'lucide-react';
 import { useTrips } from '@/hooks/useTrips';
 import { StatusBadge } from '@/components/StatusBadge';
+import { ETABadge } from '@/components/ETABadge';
 import Link from 'next/link';
 
 interface DriverDashboardProps {
@@ -93,6 +94,14 @@ export function DriverDashboard({ driverName }: DriverDashboardProps) {
                 {' · '}
                 {stats.active.cargoWeight.toLocaleString()} kg cargo
               </p>
+              {stats.active.actualStartTime && (
+                <ETABadge
+                  tripId={stats.active.id}
+                  plannedDistance={stats.active.plannedDistance}
+                  actualStartTime={stats.active.actualStartTime}
+                  isActive={true}
+                />
+              )}
             </div>
             <Link
               href={`/dashboard/trips/${stats.active.id}`}

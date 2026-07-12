@@ -7,7 +7,7 @@ export function useLocationTracking(
   tripId: string,
   active: boolean,
   onPingSuccess?: () => void,
-  pingIntervalMs = 20000 // Throttling interval (20s for demo)
+  pingIntervalMs = 30000 // Throttling interval (30s for demo)
 ) {
   const [error, setError] = useState<string | null>(null);
   const [lastPing, setLastPing] = useState<GeolocationCoordinates | null>(null);

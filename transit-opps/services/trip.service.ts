@@ -127,7 +127,7 @@ export async function createTrip(
   // Validate prerequisites (pre-transaction check — full atomic check happens on dispatch)
   await validateTripPrerequisites(data.vehicleId, data.driverId, data.cargoWeight);
 
-  return prisma.trip.create({
+  const trip = await prisma.trip.create({
     data: {
       source: data.source,
       destination: data.destination,
@@ -141,9 +141,31 @@ export async function createTrip(
     },
     include: {
       vehicle: { select: { id: true, registrationNumber: true, name: true } },
-      driver: { select: { id: true, name: true } },
+      driver: { select: { id: true, name: true, email: true } },
     },
   });
+
+  if (trip.driver?.email) {
+    sendEmail({
+      to: trip.driver.email,
+      subject: `New Trip Assignment (Draft): ${trip.source} to ${trip.destination}`,
+      templateName: 'trip_created',
+      props: {
+        driverName: trip.driver.name,
+        source: trip.source,
+        destination: trip.destination,
+        vehicleReg: trip.vehicle.registrationNumber,
+        vehicleName: trip.vehicle.name,
+        cargoWeight: trip.cargoWeight,
+        plannedDistance: trip.plannedDistance,
+      },
+      triggerEvent: 'Trip Created',
+    }).catch((err) => {
+      console.error('Failed to trigger driver assignment email:', err);
+    });
+  }
+
+  return trip;
 }
 
 
@@ -358,6 +380,28 @@ export async function completeTrip(
         });
       }
 
+      // Also send a copy of the completed trip summary (invoice) directly to the driver
+      if (fullTrip.driver.email) {
+        sendEmail({
+          to: fullTrip.driver.email,
+          subject: `Trip Completed Invoice: ${fullTrip.source} to ${fullTrip.destination}`,
+          templateName: 'trip_completed',
+          props: {
+            tripId: fullTrip.id,
+            source: fullTrip.source,
+            destination: fullTrip.destination,
+            driverName: fullTrip.driver.name,
+            vehicleReg: fullTrip.vehicle.registrationNumber,
+            vehicleName: fullTrip.vehicle.name,
+            finalOdometer: data.finalOdometer,
+            fuelConsumed: data.fuelConsumed,
+            fuelCost: data.fuelCost,
+            revenue: updatedTrip.revenuePerTrip ?? 0,
+          },
+          triggerEvent: 'Trip Completed',
+        });
+      }
+
       // Also send a copy to all Fleet Managers on their respective email ids
       const managers = await prisma.user.findMany({
         where: { role: 'FLEET_MANAGER', email: { not: fullTrip.createdBy?.email } },
@@ -525,19 +569,10 @@ export async function getTripTimeline(tripId: string) {
     orderBy: { timestamp: 'asc' },
   });
 
-  // Bucket hourly (retaining the latest log per hour)
-  const bucketed: Record<string, typeof logs[number]> = {};
-  for (const log of logs) {
-    const date = new Date(log.timestamp);
-    date.setMinutes(0, 0, 0); // truncate to hour
-    const hourKey = date.toISOString();
-    bucketed[hourKey] = log; // overwrite with latest in that hour
-  }
-
-  return Object.entries(bucketed)
-    .map(([hour, log]) => ({
+  return logs
+    .map((log) => ({
       id: log.id,
-      hour,
+      hour: log.id, // Using the unique log ID to prevent React key conflicts
       lat: log.latitude,
       lng: log.longitude,
       capturedAt: log.timestamp.toISOString(),

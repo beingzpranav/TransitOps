@@ -73,10 +73,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Bell dropdown toggle
   const [bellOpen, setBellOpen] = useState(false);
 
-  // In-app toasts state
-  const [prevNotificationsCount, setPrevNotificationsCount] = useState<number | null>(null);
-  const [toasts, setToasts] = useState<{ id: string; message: string; triggerEvent: string }[]>([]);
-
   useEffect(() => {
     const token = localStorage.getItem('transitops_token');
     const userData = localStorage.getItem('transitops_user');
@@ -90,33 +86,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.push('/login');
     }
   }, [router]);
-
-  // Monitor notification counts and show toast popup on new email
-  useEffect(() => {
-    if (prevNotificationsCount === null) {
-      setPrevNotificationsCount(notifications.length);
-      return;
-    }
-
-    if (notifications.length > prevNotificationsCount) {
-      const diff = notifications.length - prevNotificationsCount;
-      const newItems = notifications.slice(0, diff); // newest items are at the front (unshifted in service)
-
-      newItems.forEach((item) => {
-        const id = Math.random().toString(36).substring(2, 9);
-        setToasts((prev) => [...prev, { id, message: item.message, triggerEvent: item.triggerEvent }]);
-
-        // Auto remove toast after 4.5 seconds
-        setTimeout(() => {
-          setToasts((prev) => prev.filter((t) => t.id !== id));
-        }, 4500);
-      });
-
-      setPrevNotificationsCount(notifications.length);
-    } else if (notifications.length !== prevNotificationsCount) {
-      setPrevNotificationsCount(notifications.length);
-    }
-  }, [notifications, prevNotificationsCount]);
 
   function handleLogout() {
     localStorage.removeItem('transitops_token');
@@ -324,29 +293,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <main className="flex-1 overflow-y-auto bg-[#ffffff]">
           {children}
         </main>
-      </div>
-
-      {/* Floating In-App Toast Notifications Container (Top Right Corner) */}
-      <div className="fixed top-6 right-6 z-[9999] flex flex-col gap-3 max-w-sm w-full pointer-events-none">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className="pointer-events-auto bg-white border-l-4 border-l-[#ff385c] border border-[#dddddd] shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-md p-4 animate-fade-in flex flex-col gap-1 transition-all duration-200"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-[#ff385c] uppercase tracking-wider">
-                {toast.triggerEvent}
-              </span>
-              <button
-                onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
-                className="text-xs text-[#6a6a6a] hover:text-[#222222] transition-colors cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-            <p className="text-sm font-semibold text-[#222222]">{toast.message}</p>
-          </div>
-        ))}
       </div>
     </div>
   );

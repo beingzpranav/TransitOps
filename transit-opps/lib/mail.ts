@@ -3,6 +3,7 @@ import { render } from '@react-email/render';
 import * as React from 'react';
 import { TripDispatchedEmail } from '../components/emails/TripDispatchedEmail';
 import { TripCompletedEmail } from '../components/emails/TripCompletedEmail';
+import { TripCreatedEmail } from '../components/emails/TripCreatedEmail';
 import { MaintenanceOpenedEmail } from '../components/emails/MaintenanceOpenedEmail';
 import { MaintenanceClosedEmail } from '../components/emails/MaintenanceClosedEmail';
 import { DriverSuspendedEmail } from '../components/emails/DriverSuspendedEmail';
@@ -52,6 +53,9 @@ async function getEmailHtml(templateName: string, props: any): Promise<string> {
   switch (templateName) {
     case 'trip_dispatched':
       element = React.createElement(TripDispatchedEmail, props);
+      break;
+    case 'trip_created':
+      element = React.createElement(TripCreatedEmail, props);
       break;
     case 'trip_completed':
       element = React.createElement(TripCompletedEmail, props);
