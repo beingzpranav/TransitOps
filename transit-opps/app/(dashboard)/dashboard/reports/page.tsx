@@ -266,6 +266,34 @@ function VehicleROIChart() {
 
 export default function ReportsPage() {
   const [dateRange, setDateRange] = useState<DateRange>({ from: '', to: '' });
+  const [userRole, setUserRole] = useState<string>('');
+
+  useEffect(() => {
+    const userData = localStorage.getItem('transitops_user');
+    if (userData) {
+      try {
+        const u = JSON.parse(userData);
+        setUserRole(u.role);
+      } catch {}
+    }
+  }, []);
+
+  const isManager = userRole === 'FLEET_MANAGER';
+  const isFinance = userRole === 'FINANCIAL_ANALYST';
+  const isSafety = userRole === 'SAFETY_OFFICER';
+
+  // Scoped tabs list
+  const showFuel = isManager || isSafety;
+  const showCost = isManager || isFinance;
+  const showUtil = isManager || isSafety;
+  const showRoi = isManager || isFinance;
+
+  // Default tab based on role
+  const defaultTab = isFinance ? 'operational_cost' : 'fuel_efficiency';
+
+  if (!userRole) {
+    return <div className="p-6 text-gray-500">Loading reports configuration...</div>;
+  }
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -316,45 +344,61 @@ export default function ReportsPage() {
       </div>
 
       {/* Report Tabs */}
-      <Tabs defaultValue="fuel_efficiency">
-        <TabsList className="grid grid-cols-4 w-full max-w-2xl">
-          <TabsTrigger value="fuel_efficiency" id="tab-fuel-eff" className="text-xs">
-            <TrendingUp className="w-3.5 h-3.5 mr-1.5" /> Fuel Efficiency
-          </TabsTrigger>
-          <TabsTrigger value="operational_cost" id="tab-op-cost" className="text-xs">
-            <DollarSign className="w-3.5 h-3.5 mr-1.5" /> Operational Cost
-          </TabsTrigger>
-          <TabsTrigger value="fleet_utilization" id="tab-utilization" className="text-xs">
-            <Activity className="w-3.5 h-3.5 mr-1.5" /> Utilization
-          </TabsTrigger>
-          <TabsTrigger value="vehicle_roi" id="tab-roi" className="text-xs">
-            <Percent className="w-3.5 h-3.5 mr-1.5" /> Vehicle ROI
-          </TabsTrigger>
+      <Tabs defaultValue={defaultTab}>
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full max-w-2xl">
+          {showFuel && (
+            <TabsTrigger value="fuel_efficiency" id="tab-fuel-eff" className="text-xs">
+              <TrendingUp className="w-3.5 h-3.5 mr-1.5" /> Fuel Efficiency
+            </TabsTrigger>
+          )}
+          {showCost && (
+            <TabsTrigger value="operational_cost" id="tab-op-cost" className="text-xs">
+              <DollarSign className="w-3.5 h-3.5 mr-1.5" /> Operational Cost
+            </TabsTrigger>
+          )}
+          {showUtil && (
+            <TabsTrigger value="fleet_utilization" id="tab-utilization" className="text-xs">
+              <Activity className="w-3.5 h-3.5 mr-1.5" /> Utilization
+            </TabsTrigger>
+          )}
+          {showRoi && (
+            <TabsTrigger value="vehicle_roi" id="tab-roi" className="text-xs">
+              <Percent className="w-3.5 h-3.5 mr-1.5" /> Vehicle ROI
+            </TabsTrigger>
+          )}
         </TabsList>
 
-        <TabsContent value="fuel_efficiency" className="mt-6">
-          <ChartCard title="Fuel Efficiency per Vehicle (km/L)" icon={TrendingUp} reportType="fuel_efficiency" dateRange={dateRange}>
-            <FuelEfficiencyChart dateRange={dateRange} />
-          </ChartCard>
-        </TabsContent>
+        {showFuel && (
+          <TabsContent value="fuel_efficiency" className="mt-6">
+            <ChartCard title="Fuel Efficiency per Vehicle (km/L)" icon={TrendingUp} reportType="fuel_efficiency" dateRange={dateRange}>
+              <FuelEfficiencyChart dateRange={dateRange} />
+            </ChartCard>
+          </TabsContent>
+        )}
 
-        <TabsContent value="operational_cost" className="mt-6">
-          <ChartCard title="Operational Cost Breakdown" icon={DollarSign} reportType="operational_cost" dateRange={dateRange}>
-            <OperationalCostChart dateRange={dateRange} />
-          </ChartCard>
-        </TabsContent>
+        {showCost && (
+          <TabsContent value="operational_cost" className="mt-6">
+            <ChartCard title="Operational Cost Breakdown" icon={DollarSign} reportType="operational_cost" dateRange={dateRange}>
+              <OperationalCostChart dateRange={dateRange} />
+            </ChartCard>
+          </TabsContent>
+        )}
 
-        <TabsContent value="fleet_utilization" className="mt-6">
-          <ChartCard title="Fleet Utilization Over Time" icon={Activity} reportType="fleet_utilization" dateRange={dateRange}>
-            <FleetUtilizationChart dateRange={dateRange} />
-          </ChartCard>
-        </TabsContent>
+        {showUtil && (
+          <TabsContent value="fleet_utilization" className="mt-6">
+            <ChartCard title="Fleet Utilization Over Time" icon={Activity} reportType="fleet_utilization" dateRange={dateRange}>
+              <FleetUtilizationChart dateRange={dateRange} />
+            </ChartCard>
+          </TabsContent>
+        )}
 
-        <TabsContent value="vehicle_roi" className="mt-6">
-          <ChartCard title="Vehicle ROI Comparison" icon={Percent} reportType="vehicle_roi" dateRange={dateRange}>
-            <VehicleROIChart />
-          </ChartCard>
-        </TabsContent>
+        {showRoi && (
+          <TabsContent value="vehicle_roi" className="mt-6">
+            <ChartCard title="Vehicle ROI Comparison" icon={Percent} reportType="vehicle_roi" dateRange={dateRange}>
+              <VehicleROIChart />
+            </ChartCard>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
