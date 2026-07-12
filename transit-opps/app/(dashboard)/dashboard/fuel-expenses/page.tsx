@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Fuel, Receipt } from 'lucide-react';
+import { Plus, Fuel } from 'lucide-react';
 import {
   useFuelLogs, useCreateFuelLog,
   useExpenses, useCreateExpense,
@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 function FuelLogForm({ onSubmit, loading }: { onSubmit: (data: object) => void; loading: boolean }) {
   const { data: vehicles = [] } = useVehicles();
@@ -27,7 +26,7 @@ function FuelLogForm({ onSubmit, loading }: { onSubmit: (data: object) => void; 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label htmlFor="fuel-vehicle" className="form-label">Vehicle *</Label>
+        <Label htmlFor="fuel-vehicle" className="text-gray-700">Vehicle *</Label>
         <Select value={form.vehicleId} onValueChange={(v) => setForm({ ...form, vehicleId: v ?? '' })}>
           <SelectTrigger id="fuel-vehicle" className="mt-1">
             <SelectValue placeholder="Select a vehicle" />
@@ -41,20 +40,20 @@ function FuelLogForm({ onSubmit, loading }: { onSubmit: (data: object) => void; 
       </div>
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <Label htmlFor="fuel-liters" className="form-label">Liters *</Label>
+          <Label htmlFor="fuel-liters" className="text-gray-700">Liters *</Label>
           <Input id="fuel-liters" type="number" value={form.liters} onChange={e => setForm({ ...form, liters: e.target.value })} placeholder="95" min="0.1" step="0.1" required className="mt-1" />
         </div>
         <div>
-          <Label htmlFor="fuel-cost" className="form-label">Cost (₹) *</Label>
+          <Label htmlFor="fuel-cost" className="text-gray-700">Cost (₹) *</Label>
           <Input id="fuel-cost" type="number" value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })} placeholder="142.50" min="0" step="0.01" required className="mt-1" />
         </div>
         <div>
-          <Label htmlFor="fuel-date" className="form-label">Date *</Label>
+          <Label htmlFor="fuel-date" className="text-gray-700">Date *</Label>
           <Input id="fuel-date" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} required className="mt-1" />
         </div>
       </div>
       <div className="flex justify-end pt-2">
-        <Button type="submit" disabled={loading || !form.vehicleId}>
+        <Button type="submit" disabled={loading || !form.vehicleId} className="bg-amber-600 hover:bg-amber-700 text-white">
           {loading ? 'Saving...' : 'Add Fuel Log'}
         </Button>
       </div>
@@ -75,7 +74,7 @@ function ExpenseForm({ onSubmit, loading }: { onSubmit: (data: object) => void; 
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="exp-vehicle" className="form-label">Vehicle *</Label>
+          <Label htmlFor="exp-vehicle" className="text-gray-700">Vehicle *</Label>
           <Select value={form.vehicleId} onValueChange={(v) => setForm({ ...form, vehicleId: v ?? '' })}>
             <SelectTrigger id="exp-vehicle" className="mt-1">
               <SelectValue placeholder="Select a vehicle" />
@@ -88,7 +87,7 @@ function ExpenseForm({ onSubmit, loading }: { onSubmit: (data: object) => void; 
           </Select>
         </div>
         <div>
-          <Label htmlFor="exp-type" className="form-label">Expense Type *</Label>
+          <Label htmlFor="exp-type" className="text-gray-700">Expense Type *</Label>
           <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v ?? '' })}>
             <SelectTrigger id="exp-type" className="mt-1">
               <SelectValue placeholder="Select type" />
@@ -106,20 +105,20 @@ function ExpenseForm({ onSubmit, loading }: { onSubmit: (data: object) => void; 
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="exp-amount" className="form-label">Amount (₹) *</Label>
+          <Label htmlFor="exp-amount" className="text-gray-700">Amount (₹) *</Label>
           <Input id="exp-amount" type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} placeholder="45.00" min="0.01" step="0.01" required className="mt-1" />
         </div>
         <div>
-          <Label htmlFor="exp-date" className="form-label">Date *</Label>
+          <Label htmlFor="exp-date" className="text-gray-700">Date *</Label>
           <Input id="exp-date" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} required className="mt-1" />
         </div>
       </div>
       <div>
-        <Label htmlFor="exp-notes" className="form-label">Notes</Label>
+        <Label htmlFor="exp-notes" className="text-gray-700">Notes</Label>
         <Input id="exp-notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="I-94 westbound tolls" className="mt-1" />
       </div>
       <div className="flex justify-end pt-2">
-        <Button type="submit" disabled={loading || !form.vehicleId || !form.type}>
+        <Button type="submit" disabled={loading || !form.vehicleId || !form.type} className="bg-amber-600 hover:bg-amber-700 text-white">
           {loading ? 'Saving...' : 'Add Expense'}
         </Button>
       </div>
@@ -131,8 +130,10 @@ export default function FuelExpensesPage() {
   const [fuelOpen, setFuelOpen] = useState(false);
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [userRole, setUserRole] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const userData = localStorage.getItem('transitops_user');
     if (userData) {
       try {
@@ -150,8 +151,8 @@ export default function FuelExpensesPage() {
   const createExpense = useCreateExpense();
 
   const totalFuelCost = fuelLogs.reduce((s, l) => s + l.cost, 0);
-  const totalFuelLiters = fuelLogs.reduce((s, l) => s + l.liters, 0);
   const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+  const totalOperational = totalFuelCost + totalExpenses;
 
   async function handleFuelSubmit(data: object) {
     await createFuelLog.mutateAsync(data as { vehicleId: string; liters: number; cost: number });
@@ -163,155 +164,155 @@ export default function FuelExpensesPage() {
     setExpenseOpen(false);
   }
 
+  if (!mounted) return null;
+
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
+    <div className="min-h-[calc(100vh-2rem)] bg-gray-50 text-gray-900 p-8 rounded-2xl shadow-sm font-sans tracking-wide animate-fade-in relative overflow-hidden flex flex-col">
+      
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 pb-6 border-b border-gray-200">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Fuel className="w-6 h-6 text-[#ff385c]" />
-            Fuel & Expenses
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
+            <Fuel className="w-8 h-8 text-amber-500" />
+            Fuel & Expense Management
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">Track operational costs across your fleet</p>
         </div>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="kpi-card">
-          <p className="text-sm text-gray-500 mb-1">Total Fuel Cost</p>
-          <p className="text-2xl font-bold text-gray-900">₹{totalFuelCost.toFixed(2)}</p>
-          <p className="text-xs text-gray-400 mt-1">{totalFuelLiters.toFixed(0)} liters total</p>
-        </div>
-        <div className="kpi-card">
-          <p className="text-sm text-gray-500 mb-1">Total Expenses</p>
-          <p className="text-2xl font-bold text-gray-900">₹{totalExpenses.toFixed(2)}</p>
-          <p className="text-xs text-gray-400 mt-1">{expenses.length} expense entries</p>
-        </div>
-        <div className="kpi-card">
-          <p className="text-sm text-gray-500 mb-1">Combined Operational Cost</p>
-          <p className="text-2xl font-bold text-gray-900">₹{(totalFuelCost + totalExpenses).toFixed(2)}</p>
-          <p className="text-xs text-gray-400 mt-1">Fuel + expenses (excl. maintenance)</p>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <Tabs defaultValue="fuel">
-        <div className="flex items-center justify-between">
-          <TabsList>
-            <TabsTrigger value="fuel" id="tab-fuel">⛽ Fuel Logs ({fuelLogs.length})</TabsTrigger>
-            <TabsTrigger value="expenses" id="tab-expenses">🧾 Expenses ({expenses.length})</TabsTrigger>
-          </TabsList>
-          {canAddLog && (
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setFuelOpen(true)} id="add-fuel-btn">
-                <Plus className="w-4 h-4 mr-1" /> Add Fuel Log
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setExpenseOpen(true)} id="add-expense-btn">
-                <Plus className="w-4 h-4 mr-1" /> Add Expense
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {/* Fuel Logs Tab */}
-        <TabsContent value="fuel" className="mt-4">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full data-table">
-                <thead>
-                  <tr>
-                    <th className="text-left">Vehicle</th>
-                    <th className="text-left">Date</th>
-                    <th className="text-right">Liters</th>
-                    <th className="text-right">Cost (₹)</th>
-                    <th className="text-right">Cost/Liter (₹)</th>
-                    <th className="text-left">Linked Trip</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {fuelLoading ? (
-                    Array(4).fill(0).map((_, i) => <tr key={i}>{Array(6).fill(0).map((_, j) => <td key={j}><div className="h-4 bg-gray-100 rounded animate-pulse" /></td>)}</tr>)
-                  ) : fuelLogs.length === 0 ? (
-                    <tr><td colSpan={6} className="text-center py-10 text-gray-400">No fuel logs yet</td></tr>
-                  ) : (
-                    fuelLogs.map((l: FuelLog) => (
-                      <tr key={l.id}>
-                        <td>
-                          <div className="font-mono text-xs text-[#ff385c] bg-[#ff385c]/10 px-2 py-0.5 rounded w-fit">{l.vehicle?.registrationNumber}</div>
-                          <div className="text-xs text-gray-400 mt-0.5">{l.vehicle?.name}</div>
-                        </td>
-                        <td className="text-gray-600 text-sm">{new Date(l.date).toLocaleDateString()}</td>
-                        <td className="text-right font-medium">{l.liters.toFixed(1)}</td>
-                        <td className="text-right font-medium text-gray-900">₹{l.cost.toFixed(2)}</td>
-                        <td className="text-right text-gray-500 text-sm">₹{(l.cost / l.liters).toFixed(2)}</td>
-                        <td className="text-gray-500 text-xs">
-                          {l.trip ? `${l.trip.source} → ${l.trip.destination}` : 'Manual'}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+        
+        {canAddLog && (
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={() => setFuelOpen(true)} 
+              className="bg-amber-600 hover:bg-amber-700 text-white rounded-md px-5 transition-colors shadow-sm font-medium"
+            >
+              <Plus className="w-4 h-4 mr-2" /> Log Fuel
+            </Button>
+            <Button 
+              onClick={() => setExpenseOpen(true)} 
+              className="bg-amber-600 hover:bg-amber-700 text-white rounded-md px-5 transition-colors shadow-sm font-medium"
+            >
+              <Plus className="w-4 h-4 mr-2" /> Add Expense
+            </Button>
           </div>
-        </TabsContent>
+        )}
+      </div>
 
-        {/* Expenses Tab */}
-        <TabsContent value="expenses" className="mt-4">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full data-table">
-                <thead>
-                  <tr>
-                    <th className="text-left">Vehicle</th>
-                    <th className="text-left">Type</th>
-                    <th className="text-left">Date</th>
-                    <th className="text-right">Amount (₹)</th>
-                    <th className="text-left">Notes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {expLoading ? (
-                    Array(4).fill(0).map((_, i) => <tr key={i}>{Array(5).fill(0).map((_, j) => <td key={j}><div className="h-4 bg-gray-100 rounded animate-pulse" /></td>)}</tr>)
-                  ) : expenses.length === 0 ? (
-                    <tr><td colSpan={5} className="text-center py-10 text-gray-400">No expenses yet</td></tr>
-                  ) : (
-                    expenses.map((e: Expense) => (
-                      <tr key={e.id}>
-                        <td>
-                          <div className="font-mono text-xs text-[#ff385c] bg-[#ff385c]/10 px-2 py-0.5 rounded w-fit">{e.vehicle?.registrationNumber}</div>
-                          <div className="text-xs text-gray-400 mt-0.5">{e.vehicle?.name}</div>
+      <div className="flex-1 space-y-12 pb-24">
+        {/* Fuel Logs Section */}
+        <div>
+          <h2 className="text-xs font-semibold text-gray-500 tracking-[0.15em] uppercase mb-4">Fuel Logs</h2>
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Vehicle</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Liters</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Fuel Cost</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {fuelLoading ? (
+                  Array(3).fill(0).map((_, i) => (
+                    <tr key={i}>
+                      {Array(4).fill(0).map((_, j) => <td key={j} className="py-4 px-6"><div className="h-4 bg-gray-100 rounded w-full animate-pulse" /></td>)}
+                    </tr>
+                  ))
+                ) : fuelLogs.length === 0 ? (
+                  <tr><td colSpan={4} className="py-8 text-center text-sm text-gray-400">No fuel logs available</td></tr>
+                ) : (
+                  fuelLogs.map((l: FuelLog) => (
+                    <tr key={l.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="py-3 px-6">
+                        <div className="font-mono text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded w-fit border border-amber-100 uppercase">{l.vehicle?.registrationNumber}</div>
+                        <div className="text-xs text-gray-400 mt-1">{l.vehicle?.name}</div>
+                      </td>
+                      <td className="py-3 px-6 text-sm text-gray-600 font-medium">{new Date(l.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                      <td className="py-3 px-6 text-sm text-gray-900 font-medium">{l.liters.toFixed(1)} L</td>
+                      <td className="py-3 px-6 text-sm text-gray-900 font-medium">₹{l.cost.toLocaleString()}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Expenses Section */}
+        <div>
+          <h2 className="text-xs font-semibold text-gray-500 tracking-[0.15em] uppercase mb-4">Other Expenses (Toll / Misc)</h2>
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Vehicle</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Notes</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {expLoading ? (
+                  Array(3).fill(0).map((_, i) => (
+                    <tr key={i}>
+                      {Array(5).fill(0).map((_, j) => <td key={j} className="py-4 px-6"><div className="h-4 bg-gray-100 rounded w-full animate-pulse" /></td>)}
+                    </tr>
+                  ))
+                ) : expenses.length === 0 ? (
+                  <tr><td colSpan={5} className="py-8 text-center text-sm text-gray-400">No expenses available</td></tr>
+                ) : (
+                  expenses.map((e: Expense) => {
+                    // Different pill colors based on type
+                    const isToll = e.type.toLowerCase().includes('toll');
+                    const pillColor = isToll 
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                      : 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                      
+                    return (
+                      <tr key={e.id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="py-3 px-6">
+                          <div className="font-mono text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded w-fit border border-amber-100 uppercase">{e.vehicle?.registrationNumber}</div>
+                          <div className="text-xs text-gray-400 mt-1">{e.vehicle?.name}</div>
                         </td>
-                        <td>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-violet-50 text-violet-700 border border-violet-200">
+                        <td className="py-3 px-6 text-sm text-gray-600 font-medium">{new Date(e.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                        <td className="py-3 px-6">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${pillColor}`}>
                             {e.type}
                           </span>
                         </td>
-                        <td className="text-gray-600 text-sm">{new Date(e.date).toLocaleDateString()}</td>
-                        <td className="text-right font-semibold text-gray-900">₹{e.amount.toFixed(2)}</td>
-                        <td className="text-gray-500 text-sm">{e.notes ?? '—'}</td>
+                        <td className="py-3 px-6 text-sm text-gray-500 truncate max-w-xs">{e.notes || '—'}</td>
+                        <td className="py-3 px-6 text-sm text-gray-900 font-medium">₹{e.amount.toLocaleString()}</td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
+
+      {/* Footer Total */}
+      <div className="absolute bottom-0 left-0 w-full bg-white border-t border-gray-200 py-4 px-8 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)]">
+        <div className="text-xs font-mono text-gray-500 tracking-wider">
+          TOTAL OPERATIONAL COST (AUTO) = FUEL + EXPENSES
+        </div>
+        <div className="text-xl font-semibold text-amber-600">
+          ₹{totalOperational.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </div>
+      </div>
 
       {/* Dialogs */}
       <Dialog open={fuelOpen} onOpenChange={setFuelOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Add Fuel Log</DialogTitle></DialogHeader>
+        <DialogContent className="sm:max-w-md bg-white border-gray-100">
+          <DialogHeader><DialogTitle className="text-gray-900">Log Fuel</DialogTitle></DialogHeader>
           <FuelLogForm onSubmit={handleFuelSubmit} loading={createFuelLog.isPending} />
         </DialogContent>
       </Dialog>
 
       <Dialog open={expenseOpen} onOpenChange={setExpenseOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Add Expense</DialogTitle></DialogHeader>
+        <DialogContent className="sm:max-w-md bg-white border-gray-100">
+          <DialogHeader><DialogTitle className="text-gray-900">Add Expense</DialogTitle></DialogHeader>
           <ExpenseForm onSubmit={handleExpenseSubmit} loading={createExpense.isPending} />
         </DialogContent>
       </Dialog>
