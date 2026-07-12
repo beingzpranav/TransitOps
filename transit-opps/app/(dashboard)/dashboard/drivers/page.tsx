@@ -36,6 +36,7 @@ function DriverForm({
     licenseCategory: driver?.licenseCategory ?? '',
     licenseExpiry: driver?.licenseExpiry?.split('T')[0] ?? '',
     contactNumber: driver?.contactNumber ?? '',
+    email: driver?.email ?? '',
     safetyScore: driver?.safetyScore?.toString() ?? '',
     status: (driver?.status as string) ?? 'Available',
   });
@@ -46,6 +47,7 @@ function DriverForm({
       ...form,
       status: form.status as Driver['status'],
       safetyScore: form.safetyScore ? parseFloat(form.safetyScore) : undefined,
+      email: form.email || undefined,
     });
   }
 
@@ -92,6 +94,11 @@ function DriverForm({
           <Label htmlFor="safety-score" className="form-label">Safety Score (0–100)</Label>
           <Input id="safety-score" type="number" value={form.safetyScore} onChange={(e) => setForm({ ...form, safetyScore: e.target.value })} min="0" max="100" placeholder="85" className="mt-1" />
         </div>
+      </div>
+      <div>
+        <Label htmlFor="driver-email" className="form-label">Email Address</Label>
+        <Input id="driver-email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="driver@example.com" className="mt-1" />
+        <p className="text-xs text-gray-400 mt-0.5">Used for trip assignment and alert notifications</p>
       </div>
       {driver?.id && (
         <div>
@@ -401,6 +408,12 @@ export default function DriversPage() {
                   <span className="text-sm font-semibold text-gray-900">{new Date(viewDriver.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
+              {viewDriver.email && (
+                <div className="border-t border-gray-100 pt-3">
+                  <span className="text-xs text-gray-400 block font-medium">Notification Email</span>
+                  <span className="text-sm font-semibold text-gray-900">{viewDriver.email}</span>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
