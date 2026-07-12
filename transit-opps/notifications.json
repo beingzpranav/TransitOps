@@ -1,20 +1,20 @@
 [
   {
-    "id": "m24b0zv",
-    "message": "Trip from Jaipur International Airport, Airport Service Road, Rajasthan, India to Udaipur, Rajasthan, India has been dispatched.",
-    "triggerEvent": "Trip Dispatched",
-    "createdAt": "2026-07-12T09:01:18.579Z"
+    "id": "pssr5dk",
+    "message": "Trip from Miami, FL to Orlando, FL has been completed successfully.",
+    "triggerEvent": "Trip Completed",
+    "createdAt": "2026-07-12T09:34:51.743Z"
   },
   {
-    "id": "pu94xbz",
-    "message": "Trip from Jaipur International Airport, Airport Service Road, Rajasthan, India to Kolkata, West Bengal, India has been cancelled.",
+    "id": "lwzq5c0",
+    "message": "Trip from Miami, FL to Orlando, FL has been dispatched.",
+    "triggerEvent": "Trip Dispatched",
+    "createdAt": "2026-07-12T09:33:01.657Z"
+  },
+  {
+    "id": "y7ot9lq",
+    "message": "Trip from Jaipur, Jaipur Municipal Corporation, Rajasthan, India to Dharavi, Maharashtra, India has been cancelled.",
     "triggerEvent": "Trip Cancelled",
-    "createdAt": "2026-07-12T08:52:56.685Z"
-  },
-  {
-    "id": "ou835an",
-    "message": "Trip from Jaipur International Airport, Airport Service Road, Rajasthan, India to Kolkata, West Bengal, India has been dispatched.",
-    "triggerEvent": "Trip Dispatched",
-    "createdAt": "2026-07-12T08:38:24.566Z"
+    "createdAt": "2026-07-12T09:32:26.594Z"
   }
 ]

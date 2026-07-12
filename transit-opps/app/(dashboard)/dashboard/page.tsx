@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Truck, Users, MapPin, Wrench, Activity, Clock, BarChart3, RefreshCw
 } from 'lucide-react';
@@ -8,14 +8,48 @@ import { useDashboard } from '@/hooks/useReports';
 import { useTrips } from '@/hooks/useTrips';
 import { KpiCard } from '@/components/KpiCard';
 import { StatusBadge } from '@/components/StatusBadge';
+import { DriverDashboard } from '@/components/DriverDashboard';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  RadialBarChart, RadialBar, Cell, PieChart, Pie, Legend
+  Cell, PieChart, Pie, Legend
 } from 'recharts';
 
 export default function DashboardPage() {
+  const [userRole, setUserRole] = useState<string>('');
+  const [userName, setUserName] = useState<string>('');
+
+  useEffect(() => {
+    const raw = localStorage.getItem('transitops_user');
+    if (raw) {
+      try {
+        const u = JSON.parse(raw);
+        setUserRole(u.role ?? '');
+        setUserName(u.name ?? '');
+      } catch {}
+    }
+  }, []);
+
+  // Show driver-specific dashboard for DRIVER role
+  if (userRole === 'DRIVER') {
+    return <DriverDashboard driverName={userName} />;
+  }
+
+  // Avoid rendering fleet dashboard briefly before role loads
+  if (!userRole) {
+    return (
+      <div className="p-8 flex items-center gap-3">
+        <div className="w-5 h-5 border-2 border-[#ff385c] border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-gray-400">Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  return <FleetDashboard />;
+}
+
+function FleetDashboard() {
   const [filters, setFilters] = useState<{ vehicleType?: string; region?: string }>({});
   const { data: kpis, isLoading, refetch } = useDashboard(filters);
   const { data: trips } = useTrips();

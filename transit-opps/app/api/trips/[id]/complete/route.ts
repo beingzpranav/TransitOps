@@ -7,7 +7,7 @@ interface Params { params: Promise<{ id: string }> }
 
 export async function POST(req: NextRequest, { params }: Params) {
   try {
-    requireRole(req, UserRole.FLEET_MANAGER, UserRole.DISPATCHER);
+    requireRole(req, UserRole.FLEET_MANAGER, UserRole.DISPATCHER, UserRole.DRIVER);
     const { id } = await params;
     const body = await req.json();
     const parsed = completeTripSchema.safeParse(body);

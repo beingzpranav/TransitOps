@@ -118,6 +118,12 @@ export async function createTrip(
   data: z.infer<typeof createTripSchema>,
   createdById: string
 ) {
+  // Guard: verify the caller's userId still exists (catches stale JWTs after DB resets)
+  const userExists = await prisma.user.findUnique({ where: { id: createdById }, select: { id: true } });
+  if (!userExists) {
+    throw new ServiceError('Session expired — please log out and log back in', 401);
+  }
+
   // Validate prerequisites (pre-transaction check — full atomic check happens on dispatch)
   await validateTripPrerequisites(data.vehicleId, data.driverId, data.cargoWeight);
 
@@ -139,6 +145,7 @@ export async function createTrip(
     },
   });
 }
+
 
 export async function dispatchTrip(tripId: string) {
   // Run everything in a single transaction to prevent double-booking
