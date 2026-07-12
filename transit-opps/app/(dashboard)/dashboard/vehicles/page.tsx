@@ -71,24 +71,41 @@ function VehicleForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="vehicle-type" className="form-label">Type *</Label>
-          <Input
-            id="vehicle-type"
-            value={form.type}
-            onChange={(e) => setForm({ ...form, type: e.target.value })}
-            placeholder="Heavy Truck"
-            required
-            className="mt-1"
-          />
+          <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v ?? '' })}>
+            <SelectTrigger id="vehicle-type" className="mt-1">
+              <SelectValue placeholder="Select vehicle type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Heavy Truck">Heavy Truck</SelectItem>
+              <SelectItem value="Light Truck">Light Truck</SelectItem>
+              <SelectItem value="Van">Van</SelectItem>
+              <SelectItem value="Pickup">Pickup</SelectItem>
+              <SelectItem value="Tanker">Tanker</SelectItem>
+              <SelectItem value="Flatbed">Flatbed</SelectItem>
+              <SelectItem value="Refrigerated Truck">Refrigerated Truck</SelectItem>
+              <SelectItem value="Bus">Bus</SelectItem>
+              <SelectItem value="Minibus">Minibus</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <Label htmlFor="region" className="form-label">Region</Label>
-          <Input
-            id="region"
-            value={form.region}
-            onChange={(e) => setForm({ ...form, region: e.target.value })}
-            placeholder="North"
-            className="mt-1"
-          />
+          <Select value={form.region} onValueChange={(v) => setForm({ ...form, region: v ?? '' })}>
+            <SelectTrigger id="region" className="mt-1">
+              <SelectValue placeholder="Select region" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="North">North</SelectItem>
+              <SelectItem value="South">South</SelectItem>
+              <SelectItem value="East">East</SelectItem>
+              <SelectItem value="West">West</SelectItem>
+              <SelectItem value="Central">Central</SelectItem>
+              <SelectItem value="Northeast">Northeast</SelectItem>
+              <SelectItem value="Northwest">Northwest</SelectItem>
+              <SelectItem value="Southeast">Southeast</SelectItem>
+              <SelectItem value="Southwest">Southwest</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-4">
@@ -131,7 +148,7 @@ function VehicleForm({
         </div>
       </div>
       <div className="flex justify-end gap-2 pt-2">
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading || !form.type}>
           {loading ? 'Saving...' : vehicle?.id ? 'Update Vehicle' : 'Add Vehicle'}
         </Button>
       </div>

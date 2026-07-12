@@ -68,7 +68,19 @@ function DriverForm({
         </div>
         <div>
           <Label htmlFor="license-cat" className="form-label">License Category *</Label>
-          <Input id="license-cat" value={form.licenseCategory} onChange={(e) => setForm({ ...form, licenseCategory: e.target.value })} placeholder="Class A CDL" required className="mt-1" />
+          <Select value={form.licenseCategory} onValueChange={(v) => setForm({ ...form, licenseCategory: v ?? '' })}>
+            <SelectTrigger id="license-cat" className="mt-1">
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Class A CDL">Class A CDL — Heavy trucks &amp; combos</SelectItem>
+              <SelectItem value="Class B CDL">Class B CDL — Large single vehicles</SelectItem>
+              <SelectItem value="Class C CDL">Class C CDL — Hazmat / passenger</SelectItem>
+              <SelectItem value="Class B">Class B — General heavy vehicles</SelectItem>
+              <SelectItem value="Class D">Class D — Standard passenger vehicles</SelectItem>
+              <SelectItem value="Class E">Class E — Motorcycles</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -97,7 +109,7 @@ function DriverForm({
         </div>
       )}
       <div className="flex justify-end gap-2 pt-2">
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading || !form.licenseCategory}>
           {loading ? 'Saving...' : driver?.id ? 'Update Driver' : 'Add Driver'}
         </Button>
       </div>
