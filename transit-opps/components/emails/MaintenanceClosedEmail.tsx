@@ -39,7 +39,7 @@ export function MaintenanceClosedEmail({
               </tr>
               <tr>
                 <td style={styles.tableCellLabel}>Actual Cost</td>
-                <td style={styles.tableCellValue}>${cost.toLocaleString()}</td>
+                <td style={styles.tableCellValue}>₹{cost.toLocaleString()}</td>
               </tr>
               <tr>
                 <td style={styles.tableCellLabel}>Opened Date</td>

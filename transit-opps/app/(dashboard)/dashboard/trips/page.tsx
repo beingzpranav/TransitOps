@@ -97,7 +97,7 @@ function CreateTripForm({ onSubmit, loading }: { onSubmit: (data: Partial<Trip>)
           <Input id="planned-distance" type="number" value={form.plannedDistance} onChange={(e) => setForm({ ...form, plannedDistance: e.target.value })} placeholder="450" min="1" required className="mt-1" />
         </div>
         <div>
-          <Label htmlFor="revenue" className="form-label">Revenue ($)</Label>
+          <Label htmlFor="revenue" className="form-label">Revenue (₹)</Label>
           <Input id="revenue" type="number" value={form.revenuePerTrip} onChange={(e) => setForm({ ...form, revenuePerTrip: e.target.value })} placeholder="3200" min="0" className="mt-1" />
         </div>
       </div>
@@ -137,11 +137,11 @@ function CompleteTripForm({ onSubmit, loading }: { onSubmit: (data: object) => v
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="fuel-cost" className="form-label">Fuel Cost ($) *</Label>
+          <Label htmlFor="fuel-cost" className="form-label">Fuel Cost (₹) *</Label>
           <Input id="fuel-cost" type="number" value={form.fuelCost} onChange={(e) => setForm({ ...form, fuelCost: e.target.value })} placeholder="142.50" min="0" required className="mt-1" />
         </div>
         <div>
-          <Label htmlFor="trip-revenue" className="form-label">Revenue ($)</Label>
+          <Label htmlFor="trip-revenue" className="form-label">Revenue (₹)</Label>
           <Input id="trip-revenue" type="number" value={form.revenuePerTrip} onChange={(e) => setForm({ ...form, revenuePerTrip: e.target.value })} placeholder="3200" min="0" className="mt-1" />
         </div>
       </div>
@@ -437,7 +437,7 @@ export default function TripsPage() {
                 <div>
                   <span className="text-xs text-gray-400 block font-medium">Expected Revenue</span>
                   <span className="text-sm font-semibold text-gray-900">
-                    {viewTrip.revenuePerTrip != null ? `$${viewTrip.revenuePerTrip.toLocaleString()}` : '—'}
+                    {viewTrip.revenuePerTrip != null ? `₹${viewTrip.revenuePerTrip.toLocaleString()}` : '—'}
                   </span>
                 </div>
               </div>
@@ -456,7 +456,7 @@ export default function TripsPage() {
                     <div>
                       <span className="text-gray-400 block">Fuel Cost</span>
                       <span className="font-semibold text-emerald-900">
-                        {viewTrip.fuelLogs?.[0]?.cost != null ? `$${viewTrip.fuelLogs[0].cost.toLocaleString()}` : '—'}
+                        {viewTrip.fuelLogs?.[0]?.cost != null ? `₹${viewTrip.fuelLogs[0].cost.toLocaleString()}` : '—'}
                       </span>
                     </div>
                   </div>

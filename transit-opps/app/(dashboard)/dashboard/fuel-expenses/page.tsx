@@ -45,7 +45,7 @@ function FuelLogForm({ onSubmit, loading }: { onSubmit: (data: object) => void; 
           <Input id="fuel-liters" type="number" value={form.liters} onChange={e => setForm({ ...form, liters: e.target.value })} placeholder="95" min="0.1" step="0.1" required className="mt-1" />
         </div>
         <div>
-          <Label htmlFor="fuel-cost" className="form-label">Cost ($) *</Label>
+          <Label htmlFor="fuel-cost" className="form-label">Cost (₹) *</Label>
           <Input id="fuel-cost" type="number" value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })} placeholder="142.50" min="0" step="0.01" required className="mt-1" />
         </div>
         <div>
@@ -106,7 +106,7 @@ function ExpenseForm({ onSubmit, loading }: { onSubmit: (data: object) => void; 
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="exp-amount" className="form-label">Amount ($) *</Label>
+          <Label htmlFor="exp-amount" className="form-label">Amount (₹) *</Label>
           <Input id="exp-amount" type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} placeholder="45.00" min="0.01" step="0.01" required className="mt-1" />
         </div>
         <div>
@@ -180,17 +180,17 @@ export default function FuelExpensesPage() {
       <div className="grid grid-cols-3 gap-4">
         <div className="kpi-card">
           <p className="text-sm text-gray-500 mb-1">Total Fuel Cost</p>
-          <p className="text-2xl font-bold text-gray-900">${totalFuelCost.toFixed(2)}</p>
+          <p className="text-2xl font-bold text-gray-900">₹{totalFuelCost.toFixed(2)}</p>
           <p className="text-xs text-gray-400 mt-1">{totalFuelLiters.toFixed(0)} liters total</p>
         </div>
         <div className="kpi-card">
           <p className="text-sm text-gray-500 mb-1">Total Expenses</p>
-          <p className="text-2xl font-bold text-gray-900">${totalExpenses.toFixed(2)}</p>
+          <p className="text-2xl font-bold text-gray-900">₹{totalExpenses.toFixed(2)}</p>
           <p className="text-xs text-gray-400 mt-1">{expenses.length} expense entries</p>
         </div>
         <div className="kpi-card">
           <p className="text-sm text-gray-500 mb-1">Combined Operational Cost</p>
-          <p className="text-2xl font-bold text-gray-900">${(totalFuelCost + totalExpenses).toFixed(2)}</p>
+          <p className="text-2xl font-bold text-gray-900">₹{(totalFuelCost + totalExpenses).toFixed(2)}</p>
           <p className="text-xs text-gray-400 mt-1">Fuel + expenses (excl. maintenance)</p>
         </div>
       </div>
@@ -224,8 +224,8 @@ export default function FuelExpensesPage() {
                     <th className="text-left">Vehicle</th>
                     <th className="text-left">Date</th>
                     <th className="text-right">Liters</th>
-                    <th className="text-right">Cost ($)</th>
-                    <th className="text-right">Cost/Liter</th>
+                    <th className="text-right">Cost (₹)</th>
+                    <th className="text-right">Cost/Liter (₹)</th>
                     <th className="text-left">Linked Trip</th>
                   </tr>
                 </thead>
@@ -243,8 +243,8 @@ export default function FuelExpensesPage() {
                         </td>
                         <td className="text-gray-600 text-sm">{new Date(l.date).toLocaleDateString()}</td>
                         <td className="text-right font-medium">{l.liters.toFixed(1)}</td>
-                        <td className="text-right font-medium text-gray-900">${l.cost.toFixed(2)}</td>
-                        <td className="text-right text-gray-500 text-sm">${(l.cost / l.liters).toFixed(2)}</td>
+                        <td className="text-right font-medium text-gray-900">₹{l.cost.toFixed(2)}</td>
+                        <td className="text-right text-gray-500 text-sm">₹{(l.cost / l.liters).toFixed(2)}</td>
                         <td className="text-gray-500 text-xs">
                           {l.trip ? `${l.trip.source} → ${l.trip.destination}` : 'Manual'}
                         </td>
@@ -267,7 +267,7 @@ export default function FuelExpensesPage() {
                     <th className="text-left">Vehicle</th>
                     <th className="text-left">Type</th>
                     <th className="text-left">Date</th>
-                    <th className="text-right">Amount ($)</th>
+                    <th className="text-right">Amount (₹)</th>
                     <th className="text-left">Notes</th>
                   </tr>
                 </thead>
@@ -289,7 +289,7 @@ export default function FuelExpensesPage() {
                           </span>
                         </td>
                         <td className="text-gray-600 text-sm">{new Date(e.date).toLocaleDateString()}</td>
-                        <td className="text-right font-semibold text-gray-900">${e.amount.toFixed(2)}</td>
+                        <td className="text-right font-semibold text-gray-900">₹{e.amount.toFixed(2)}</td>
                         <td className="text-gray-500 text-sm">{e.notes ?? '—'}</td>
                       </tr>
                     ))

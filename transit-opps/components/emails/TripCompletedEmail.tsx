@@ -61,7 +61,7 @@ export function TripCompletedEmail({
               </tr>
               <tr>
                 <td style={styles.tableCellLabel}>Fuel Cost</td>
-                <td style={styles.tableCellValue}>${fuelCost.toFixed(2)}</td>
+                <td style={styles.tableCellValue}>₹{fuelCost.toFixed(2)}</td>
               </tr>
               <tr>
                 <td style={styles.tableCellLabel}>Fuel Efficiency</td>
@@ -69,12 +69,12 @@ export function TripCompletedEmail({
               </tr>
               <tr>
                 <td style={styles.tableCellLabel}>Revenue Generated</td>
-                <td style={styles.tableCellValue}>${revenue.toFixed(2)}</td>
+                <td style={styles.tableCellValue}>₹{revenue.toFixed(2)}</td>
               </tr>
               <tr>
                 <td style={styles.tableCellLabel}>Margin / Profit</td>
                 <td style={{ ...styles.tableCellValue, fontWeight: 'bold', color: profit >= 0 ? '#10b981' : '#ef4444' }}>
-                  ${profit.toFixed(2)}
+                  ₹{profit.toFixed(2)}
                 </td>
               </tr>
             </tbody>

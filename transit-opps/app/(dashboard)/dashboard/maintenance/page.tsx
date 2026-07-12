@@ -46,7 +46,7 @@ function OpenMaintenanceForm({ onSubmit, loading }: { onSubmit: (data: object) =
         <Textarea id="maint-desc" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Engine overhaul and brake pad replacement..." rows={3} required className="mt-1" />
       </div>
       <div>
-        <Label htmlFor="maint-cost" className="form-label">Estimated Cost ($) *</Label>
+        <Label htmlFor="maint-cost" className="form-label">Estimated Cost (₹) *</Label>
         <Input id="maint-cost" type="number" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} placeholder="4800" min="0" required className="mt-1" />
       </div>
       <div className="flex justify-end gap-2 pt-2">
@@ -115,7 +115,7 @@ export default function MaintenancePage() {
         <td>
           <p className="text-sm text-gray-900 line-clamp-2">{log.description}</p>
         </td>
-        <td className="text-right font-medium">${log.cost.toLocaleString()}</td>
+        <td className="text-right font-medium">₹{log.cost.toLocaleString()}</td>
         <td className="text-gray-600 text-sm">{new Date(log.dateOpened).toLocaleDateString()}</td>
         <td className="text-gray-600 text-sm">{log.dateClosed ? new Date(log.dateClosed).toLocaleDateString() : '—'}</td>
         <td>
@@ -287,7 +287,7 @@ export default function MaintenancePage() {
                 </div>
                 <div>
                   <span className="text-xs text-gray-400 block font-medium">Total Cost</span>
-                  <span className="text-sm font-semibold text-gray-900">${viewLog.cost.toLocaleString()}</span>
+                  <span className="text-sm font-semibold text-gray-900">₹{viewLog.cost.toLocaleString()}</span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 border-b border-gray-100 pb-3">

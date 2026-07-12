@@ -134,7 +134,7 @@ function VehicleForm({
           />
         </div>
         <div>
-          <Label htmlFor="acq-cost" className="form-label">Acquisition Cost ($) *</Label>
+          <Label htmlFor="acq-cost" className="form-label">Acquisition Cost (₹) *</Label>
           <Input
             id="acq-cost"
             type="number"
@@ -311,7 +311,7 @@ export default function VehiclesPage() {
                     <td><StatusBadge status={v.status} /></td>
                     <td className="text-right font-medium">{v.maxLoadCapacity.toLocaleString()}</td>
                     <td className="text-right text-gray-600">{v.odometer.toLocaleString()}</td>
-                    <td className="text-right text-gray-600">${v.acquisitionCost.toLocaleString()}</td>
+                    <td className="text-right text-gray-600">₹{v.acquisitionCost.toLocaleString()}</td>
                     <td className="text-gray-500">{v.region ?? '—'}</td>
                     {isFleetManager && (
                       <td>
@@ -434,7 +434,7 @@ export default function VehiclesPage() {
                 </div>
                 <div>
                   <span className="text-xs text-gray-400 block font-medium">Acquisition Cost</span>
-                  <span className="text-sm font-semibold text-gray-900">${viewVehicle.acquisitionCost.toLocaleString()}</span>
+                  <span className="text-sm font-semibold text-gray-900">₹{viewVehicle.acquisitionCost.toLocaleString()}</span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">

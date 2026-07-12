@@ -127,7 +127,7 @@ function OperationalCostChart({ dateRange }: { dateRange: DateRange }) {
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
             <XAxis dataKey="registrationNumber" tick={{ fontSize: 10 }} />
             <YAxis tick={{ fontSize: 10 }} />
-            <Tooltip formatter={(v: any) => [`$${Number(v).toFixed(2)}`]} />
+            <Tooltip formatter={(v: any) => [`₹${Number(v).toFixed(2)}`]} />
             <Legend iconSize={8} />
             <Bar dataKey="fuelCost" name="Fuel" stackId="a" fill="#3b82f6" radius={[0, 0, 0, 0]} />
             <Bar dataKey="maintenanceCost" name="Maintenance" stackId="a" fill="#f59e0b" />
@@ -139,7 +139,7 @@ function OperationalCostChart({ dateRange }: { dateRange: DateRange }) {
             <Pie data={pieData} cx="50%" cy="50%" outerRadius={90} dataKey="value" label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}>
               {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
             </Pie>
-            <Tooltip formatter={(v: any) => [`$${Number(v).toFixed(2)}`]} />
+            <Tooltip formatter={(v: any) => [`₹${Number(v).toFixed(2)}`]} />
           </PieChart>
         </ResponsiveContainer>
       </div>
@@ -147,10 +147,10 @@ function OperationalCostChart({ dateRange }: { dateRange: DateRange }) {
         <table className="w-full data-table text-sm">
           <thead><tr>
             <th className="text-left">Vehicle</th>
-            <th className="text-right">Fuel ($)</th>
-            <th className="text-right">Maintenance ($)</th>
-            <th className="text-right">Expenses ($)</th>
-            <th className="text-right">Total ($)</th>
+            <th className="text-right">Fuel (₹)</th>
+            <th className="text-right">Maintenance (₹)</th>
+            <th className="text-right">Expenses (₹)</th>
+            <th className="text-right">Total (₹)</th>
           </tr></thead>
           <tbody>
             {chartData.map((row, i) => (
@@ -159,7 +159,7 @@ function OperationalCostChart({ dateRange }: { dateRange: DateRange }) {
                 <td className="text-right">{row.fuelCost.toFixed(2)}</td>
                 <td className="text-right">{row.maintenanceCost.toFixed(2)}</td>
                 <td className="text-right">{row.expenseCost.toFixed(2)}</td>
-                <td className="text-right font-semibold text-gray-900">${row.totalOperationalCost.toFixed(2)}</td>
+                <td className="text-right font-semibold text-gray-900">₹{row.totalOperationalCost.toFixed(2)}</td>
               </tr>
             ))}
           </tbody>
@@ -239,9 +239,9 @@ function VehicleROIChart() {
           <thead><tr>
             <th className="text-left">Vehicle</th>
             <th className="text-right">Trips</th>
-            <th className="text-right">Revenue ($)</th>
-            <th className="text-right">Total Cost ($)</th>
-            <th className="text-right">Acq. Cost ($)</th>
+            <th className="text-right">Revenue (₹)</th>
+            <th className="text-right">Total Cost (₹)</th>
+            <th className="text-right">Acq. Cost (₹)</th>
             <th className="text-right">ROI %</th>
           </tr></thead>
           <tbody>
