@@ -10,6 +10,7 @@ export interface Driver {
   licenseCategory: string;
   licenseExpiry: string;
   contactNumber: string;
+  email?: string | null;
   safetyScore?: number;
   status: 'Available' | 'OnTrip' | 'OffDuty' | 'Suspended';
   createdAt: string;

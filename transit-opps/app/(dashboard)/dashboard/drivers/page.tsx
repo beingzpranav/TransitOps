@@ -36,6 +36,7 @@ function DriverForm({
     licenseCategory: driver?.licenseCategory ?? '',
     licenseExpiry: driver?.licenseExpiry?.split('T')[0] ?? '',
     contactNumber: driver?.contactNumber ?? '',
+    email: driver?.email ?? '',
     safetyScore: driver?.safetyScore?.toString() ?? '',
     status: (driver?.status as string) ?? 'Available',
   });
@@ -46,6 +47,7 @@ function DriverForm({
       ...form,
       status: form.status as Driver['status'],
       safetyScore: form.safetyScore ? parseFloat(form.safetyScore) : undefined,
+      email: form.email || undefined,
     });
   }
 
@@ -68,7 +70,19 @@ function DriverForm({
         </div>
         <div>
           <Label htmlFor="license-cat" className="form-label">License Category *</Label>
-          <Input id="license-cat" value={form.licenseCategory} onChange={(e) => setForm({ ...form, licenseCategory: e.target.value })} placeholder="Class A CDL" required className="mt-1" />
+          <Select value={form.licenseCategory} onValueChange={(v) => setForm({ ...form, licenseCategory: v ?? '' })}>
+            <SelectTrigger id="license-cat" className="mt-1">
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Class A CDL">Class A CDL — Heavy trucks &amp; combos</SelectItem>
+              <SelectItem value="Class B CDL">Class B CDL — Large single vehicles</SelectItem>
+              <SelectItem value="Class C CDL">Class C CDL — Hazmat / passenger</SelectItem>
+              <SelectItem value="Class B">Class B — General heavy vehicles</SelectItem>
+              <SelectItem value="Class D">Class D — Standard passenger vehicles</SelectItem>
+              <SelectItem value="Class E">Class E — Motorcycles</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -80,6 +94,11 @@ function DriverForm({
           <Label htmlFor="safety-score" className="form-label">Safety Score (0–100)</Label>
           <Input id="safety-score" type="number" value={form.safetyScore} onChange={(e) => setForm({ ...form, safetyScore: e.target.value })} min="0" max="100" placeholder="85" className="mt-1" />
         </div>
+      </div>
+      <div>
+        <Label htmlFor="driver-email" className="form-label">Email Address</Label>
+        <Input id="driver-email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="driver@example.com" className="mt-1" />
+        <p className="text-xs text-gray-400 mt-0.5">Used for trip assignment and alert notifications</p>
       </div>
       {driver?.id && (
         <div>
@@ -97,7 +116,7 @@ function DriverForm({
         </div>
       )}
       <div className="flex justify-end gap-2 pt-2">
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading || !form.licenseCategory}>
           {loading ? 'Saving...' : driver?.id ? 'Update Driver' : 'Add Driver'}
         </Button>
       </div>
@@ -389,6 +408,12 @@ export default function DriversPage() {
                   <span className="text-sm font-semibold text-gray-900">{new Date(viewDriver.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
+              {viewDriver.email && (
+                <div className="border-t border-gray-100 pt-3">
+                  <span className="text-xs text-gray-400 block font-medium">Notification Email</span>
+                  <span className="text-sm font-semibold text-gray-900">{viewDriver.email}</span>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>

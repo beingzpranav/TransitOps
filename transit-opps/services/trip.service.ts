@@ -200,7 +200,7 @@ export async function dispatchTrip(tripId: string) {
 
     // Trigger basic in-app notification
     createNotification(
-      `Trip from ${updatedTrip.source} to ${updatedTrip.destination} has been dispatched.`,
+      `Trip from ${trip.source} to ${trip.destination} has been dispatched.`,
       'Trip Dispatched'
     );
 
@@ -214,26 +214,26 @@ export async function dispatchTrip(tripId: string) {
       include: { driver: true, vehicle: true, createdBy: true },
     });
     if (fullTrip && fullTrip.driver) {
-      const driverEmail = `${fullTrip.driver.name.toLowerCase().replace(/\s+/g, '.')}@transitops-driver.com`;
-      
-      // Email to driver
-      sendEmail({
-        to: driverEmail,
-        subject: `New Trip Assignment: ${fullTrip.source} to ${fullTrip.destination}`,
-        templateName: 'trip_dispatched',
-        props: {
-          driverName: fullTrip.driver.name,
-          source: fullTrip.source,
-          destination: fullTrip.destination,
-          vehicleReg: fullTrip.vehicle.registrationNumber,
-          vehicleName: fullTrip.vehicle.name,
-          cargoWeight: fullTrip.cargoWeight,
-          plannedDistance: fullTrip.plannedDistance,
-        },
-        triggerEvent: 'Trip Dispatched',
-      });
+      // Email to driver (only if they have an email on file)
+      if (fullTrip.driver.email) {
+        sendEmail({
+          to: fullTrip.driver.email,
+          subject: `New Trip Assignment: ${fullTrip.source} to ${fullTrip.destination}`,
+          templateName: 'trip_dispatched',
+          props: {
+            driverName: fullTrip.driver.name,
+            source: fullTrip.source,
+            destination: fullTrip.destination,
+            vehicleReg: fullTrip.vehicle.registrationNumber,
+            vehicleName: fullTrip.vehicle.name,
+            cargoWeight: fullTrip.cargoWeight,
+            plannedDistance: fullTrip.plannedDistance,
+          },
+          triggerEvent: 'Trip Dispatched',
+        });
+      }
 
-      // Email to dispatcher/creator's respective email id
+      // Email to dispatcher/creator
       if (fullTrip.createdBy?.email) {
         sendEmail({
           to: fullTrip.createdBy.email,
@@ -315,7 +315,7 @@ export async function completeTrip(
 
     // Trigger basic in-app notification
     createNotification(
-      `Trip from ${updatedTrip.source} to ${updatedTrip.destination} has been completed successfully.`,
+      `Trip from ${trip.source} to ${trip.destination} has been completed successfully.`,
       'Trip Completed'
     );
 

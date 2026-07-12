@@ -78,6 +78,7 @@ model Driver {
   licenseCategory String
   licenseExpiry   DateTime
   contactNumber   String
+  email           String?      @unique
   safetyScore     Float?
   status          DriverStatus @default(Available)
   createdAt       DateTime     @default(now())

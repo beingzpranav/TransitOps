@@ -13,6 +13,7 @@ export const createDriverSchema = z.object({
   licenseCategory: z.string().min(1, 'License category is required'),
   licenseExpiry: z.string().datetime({ offset: true }).or(z.string().date()),
   contactNumber: z.string().min(1, 'Contact number is required'),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
   safetyScore: z.number().min(0).max(100).optional(),
   status: z.enum(['Available', 'OffDuty']).default('Available'),
 });
@@ -23,6 +24,7 @@ export const updateDriverSchema = z.object({
   licenseCategory: z.string().min(1).optional(),
   licenseExpiry: z.string().datetime({ offset: true }).or(z.string().date()).optional(),
   contactNumber: z.string().min(1).optional(),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
   safetyScore: z.number().min(0).max(100).optional(),
   status: z.enum(['Available', 'OffDuty', 'Suspended']).optional(),
 });
@@ -64,8 +66,13 @@ export async function createDriver(data: z.infer<typeof createDriverSchema>) {
 
   return prisma.driver.create({
     data: {
-      ...data,
+      name: data.name,
+      licenseNumber: data.licenseNumber,
+      licenseCategory: data.licenseCategory,
       licenseExpiry: new Date(data.licenseExpiry),
+      contactNumber: data.contactNumber,
+      email: data.email || null,
+      safetyScore: data.safetyScore,
       status: data.status as DriverStatus,
     },
   });
@@ -94,6 +101,7 @@ export async function updateDriver(
       ...(data.licenseCategory !== undefined ? { licenseCategory: data.licenseCategory } : {}),
       ...(data.licenseExpiry !== undefined ? { licenseExpiry: new Date(data.licenseExpiry) } : {}),
       ...(data.contactNumber !== undefined ? { contactNumber: data.contactNumber } : {}),
+      ...(data.email !== undefined ? { email: data.email || null } : {}),
       ...(data.safetyScore !== undefined ? { safetyScore: data.safetyScore } : {}),
       ...(data.status !== undefined ? { status: data.status as DriverStatus } : {}),
     },
@@ -101,19 +109,20 @@ export async function updateDriver(
 
   if (data.status === 'Suspended' && driver.status !== DriverStatus.Suspended) {
     try {
-      const driverEmail = `${updatedDriver.name.toLowerCase().replace(/\s+/g, '.')}@transitops-driver.com`;
-      // Send to driver
-      sendEmail({
-        to: driverEmail,
-        subject: `Compliance Alert: Driver Status Suspended — ${updatedDriver.name}`,
-        templateName: 'driver_suspended',
-        props: {
-          driverName: updatedDriver.name,
-          licenseNumber: updatedDriver.licenseNumber,
-          safetyScore: updatedDriver.safetyScore,
-        },
-        triggerEvent: 'Driver Suspended',
-      });
+      // Send to driver (if they have an email on file)
+      if (updatedDriver.email) {
+        sendEmail({
+          to: updatedDriver.email,
+          subject: `Compliance Alert: Your Driver Status is Suspended — ${updatedDriver.name}`,
+          templateName: 'driver_suspended',
+          props: {
+            driverName: updatedDriver.name,
+            licenseNumber: updatedDriver.licenseNumber,
+            safetyScore: updatedDriver.safetyScore,
+          },
+          triggerEvent: 'Driver Suspended',
+        });
+      }
 
       // Also send to all safety officers
       const officers = await prisma.user.findMany({
@@ -152,19 +161,20 @@ export async function suspendDriver(id: string) {
 
   // Trigger suspension email to driver and safety officers
   try {
-    const driverEmail = `${updatedDriver.name.toLowerCase().replace(/\s+/g, '.')}@transitops-driver.com`;
-    // Send to driver
-    sendEmail({
-      to: driverEmail,
-      subject: `Compliance Alert: Driver Status Suspended — ${updatedDriver.name}`,
-      templateName: 'driver_suspended',
-      props: {
-        driverName: updatedDriver.name,
-        licenseNumber: updatedDriver.licenseNumber,
-        safetyScore: updatedDriver.safetyScore,
-      },
-      triggerEvent: 'Driver Suspended',
-    });
+    // Send to driver (only if they have an email on record)
+    if (updatedDriver.email) {
+      sendEmail({
+        to: updatedDriver.email,
+        subject: `Compliance Alert: Your Driver Status is Suspended — ${updatedDriver.name}`,
+        templateName: 'driver_suspended',
+        props: {
+          driverName: updatedDriver.name,
+          licenseNumber: updatedDriver.licenseNumber,
+          safetyScore: updatedDriver.safetyScore,
+        },
+        triggerEvent: 'Driver Suspended',
+      });
+    }
 
     // Also send to all safety officers
     const officers = await prisma.user.findMany({
