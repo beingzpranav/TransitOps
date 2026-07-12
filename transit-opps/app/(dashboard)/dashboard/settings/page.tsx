@@ -196,7 +196,7 @@ export default function SettingsPage() {
                 </Label>
                 <Select
                   value={currency}
-                  onValueChange={setCurrency}
+                  onValueChange={(value) => setCurrency(value ?? '')}
                   disabled={!isFleetManager}
                 >
                   <SelectTrigger id="currency">
@@ -217,7 +217,7 @@ export default function SettingsPage() {
                 </Label>
                 <Select
                   value={distanceUnit}
-                  onValueChange={setDistanceUnit}
+                  onValueChange={(value) => setDistanceUnit(value ?? '')}
                   disabled={!isFleetManager}
                 >
                   <SelectTrigger id="distance-unit">
