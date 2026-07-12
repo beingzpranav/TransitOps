@@ -18,7 +18,11 @@ export interface Trip {
   fuelConsumed?: number;
   revenuePerTrip?: number;
   vehicle?: { id: string; registrationNumber: string; name: string };
+<<<<<<< Updated upstream
   driver?: { id: string; name: string; licenseNumber: string; licenseCategory?: string };
+=======
+  driver?: { id: string; name: string; licenseNumber: string; licenseCategory?: string; email?: string };
+>>>>>>> Stashed changes
   createdBy?: { id: string; name: string; email: string };
   fuelLogs?: { id: string; cost: number; liters: number }[];
   createdAt: string;
