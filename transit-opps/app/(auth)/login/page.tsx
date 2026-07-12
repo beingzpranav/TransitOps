@@ -60,7 +60,7 @@ export default function LoginPage() {
       <div className="hidden lg:flex flex-col justify-between w-1/2 p-12 text-white">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl ">
-            <img src="Transit Ops Logo.png" alt="Logo" className="w-7 h-7" height={50} width={50} />
+            <img src="/Transit Ops Logo.png" alt="Logo" className="w-7 h-7" height={50} width={50} />
           </div>
           <span className="text-xl font-bold tracking-tight">TransitOps</span>
         </div>

@@ -435,3 +435,109 @@ export async function cancelTrip(tripId: string) {
     return { id: tripId, status: TripStatus.Cancelled };
   });
 }
+
+export async function startTrip(tripId: string, driverId: string) {
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+  });
+
+  if (!trip) throw new ServiceError('Trip not found', 404);
+
+  // verify ownership
+  if (trip.driverId !== driverId) {
+    throw new ServiceError('Forbidden — you are not the driver assigned to this trip', 403);
+  }
+
+  // check status and actualStartTime
+  if (trip.status !== TripStatus.Dispatched) {
+    throw new ServiceError(`Trip must be in Dispatched status to start (current: ${trip.status})`, 400);
+  }
+
+  if (trip.actualStartTime !== null) {
+    throw new ServiceError('Trip has already started', 400);
+  }
+
+  // Atomic update
+  const updatedTrip = await prisma.trip.update({
+    where: { id: tripId },
+    data: { actualStartTime: new Date() },
+  });
+
+  // Trigger basic in-app notification
+  createNotification(
+    `Driver has started the trip from ${trip.source} to ${trip.destination}.`,
+    'Trip Started'
+  );
+
+  return updatedTrip;
+}
+
+export async function recordLocationPing(
+  tripId: string,
+  driverId: string,
+  latitude: number,
+  longitude: number
+) {
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+  });
+
+  if (!trip) throw new ServiceError('Trip not found', 404);
+
+  // verify ownership
+  if (trip.driverId !== driverId) {
+    throw new ServiceError('Forbidden — you are not the driver assigned to this trip', 403);
+  }
+
+  // check status
+  if (trip.status !== TripStatus.Dispatched) {
+    throw new ServiceError(`Trip must be in progress (Dispatched) to record location (current: ${trip.status})`, 400);
+  }
+
+  const log = await prisma.tripLocationLog.create({
+    data: {
+      tripId,
+      latitude,
+      longitude,
+      timestamp: new Date(),
+    },
+  });
+
+  return log;
+}
+
+export async function getTripTimeline(tripId: string) {
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+  });
+
+  if (!trip) throw new ServiceError('Trip not found', 404);
+
+  const logs = await prisma.tripLocationLog.findMany({
+    where: { tripId },
+    orderBy: { timestamp: 'asc' },
+  });
+
+  // Bucket hourly (retaining the latest log per hour)
+  const bucketed: Record<string, typeof logs[number]> = {};
+  for (const log of logs) {
+    const date = new Date(log.timestamp);
+    date.setMinutes(0, 0, 0); // truncate to hour
+    const hourKey = date.toISOString();
+    bucketed[hourKey] = log; // overwrite with latest in that hour
+  }
+
+  return Object.entries(bucketed)
+    .map(([hour, log]) => ({
+      id: log.id,
+      hour,
+      lat: log.latitude,
+      lng: log.longitude,
+      capturedAt: log.timestamp.toISOString(),
+      timestamp: log.timestamp,
+      latitude: log.latitude,
+      longitude: log.longitude,
+    }))
+    .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()); // descending order (latest first)
+}
+

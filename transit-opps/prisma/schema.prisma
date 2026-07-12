@@ -17,6 +17,7 @@ enum UserRole {
   DISPATCHER
   SAFETY_OFFICER
   FINANCIAL_ANALYST
+  DRIVER
 }
 
 enum VehicleStatus {
@@ -48,6 +49,8 @@ model User {
   passwordHash String
   name         String
   role         UserRole
+  driverId     String?  @unique
+  driver       Driver?  @relation(fields: [driverId], references: [id], onDelete: SetNull)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   trips        Trip[]   @relation("TripCreatedBy")
@@ -84,29 +87,32 @@ model Driver {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   trips           Trip[]
+  user            User?
 }
 
 model Trip {
-  id             String     @id @default(cuid())
-  source         String
-  destination    String
-  vehicleId      String
-  driverId       String
-  createdById    String
-  cargoWeight    Float
+  id              String            @id @default(cuid())
+  source          String
+  destination     String
+  vehicleId       String
+  driverId        String
+  createdById     String
+  cargoWeight     Float
   plannedDistance Float
-  status         TripStatus @default(Draft)
+  status          TripStatus        @default(Draft)
+  actualStartTime DateTime?
   // Completion fields
-  finalOdometer  Float?
-  fuelConsumed   Float?
-  revenuePerTrip Float?
+  finalOdometer   Float?
+  fuelConsumed    Float?
+  revenuePerTrip  Float?
   // Relations
-  vehicle        Vehicle    @relation(fields: [vehicleId], references: [id])
-  driver         Driver     @relation(fields: [driverId], references: [id])
-  createdBy      User       @relation("TripCreatedBy", fields: [createdById], references: [id])
-  fuelLogs       FuelLog[]
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  vehicle         Vehicle           @relation(fields: [vehicleId], references: [id])
+  driver          Driver            @relation(fields: [driverId], references: [id])
+  createdBy       User              @relation("TripCreatedBy", fields: [createdById], references: [id])
+  fuelLogs        FuelLog[]
+  locationLogs    TripLocationLog[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 }
 
 model MaintenanceLog {
@@ -151,4 +157,13 @@ model SystemSetting {
   currency     String   @default("INR (Rs)")
   distanceUnit String   @default("Kilometers")
   updatedAt    DateTime @updatedAt
+}
+
+model TripLocationLog {
+  id        String   @id @default(cuid())
+  tripId    String
+  latitude  Float
+  longitude Float
+  timestamp DateTime @default(now())
+  trip      Trip     @relation(fields: [tripId], references: [id])
 }

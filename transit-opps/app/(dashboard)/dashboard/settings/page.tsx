@@ -174,6 +174,7 @@ export default function SettingsPage() {
               </div>
             )}
 
+<<<<<<< Updated upstream
             {isFleetManager && (
               <Button
                 type="submit"
@@ -185,6 +186,137 @@ export default function SettingsPage() {
               </Button>
             )}
           </form>
+=======
+              <div className="space-y-1.5">
+                <Label htmlFor="currency" className="text-xs font-semibold text-gray-700">
+                  Currency *
+                </Label>
+                <Select
+                  value={currency}
+                  onValueChange={(v) => setCurrency(v ?? '')}
+                  disabled={!isFleetManager}
+                >
+                  <SelectTrigger id="currency">
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="INR (Rs)">INR (Rs) — Indian Rupee</SelectItem>
+                    <SelectItem value="USD ($)">USD ($) — US Dollar</SelectItem>
+                    <SelectItem value="EUR (€)">EUR (€) — Euro</SelectItem>
+                    <SelectItem value="GBP (£)">GBP (£) — British Pound</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="distance-unit" className="text-xs font-semibold text-gray-700">
+                  Distance Unit *
+                </Label>
+                <Select
+                  value={distanceUnit}
+                  onValueChange={(v) => setDistanceUnit(v ?? '')}
+                  disabled={!isFleetManager}
+                >
+                  <SelectTrigger id="distance-unit">
+                    <SelectValue placeholder="Select distance unit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Kilometers">Kilometers (km)</SelectItem>
+                    <SelectItem value="Miles">Miles (mi)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 text-xs text-red-600 rounded-xl">
+                  {error}
+                </div>
+              )}
+
+              {success && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-xs text-emerald-600 rounded-xl">
+                  System settings updated successfully!
+                </div>
+              )}
+
+              {isFleetManager && (
+                <Button
+                  type="submit"
+                  disabled={updateSettings.isPending}
+                  className="w-full flex items-center justify-center gap-2 mt-4 cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  {updateSettings.isPending ? 'Saving...' : 'Save changes'}
+                </Button>
+              )}
+            </form>
+          </div>
+        </div>
+
+        {/* Right Column: RBAC Matrix */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                <Shield className="w-4 h-4 text-[#ff385c]" />
+                Role-Based Access Control (RBAC) Matrix
+              </h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Overview of current feature permissions mapped per system role.
+              </p>
+            </div>
+
+            <div className="overflow-x-auto -mx-6">
+              <table className="w-full text-sm text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-100 bg-gray-50/50">
+                    <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+                    <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Fleet</th>
+                    <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Driver</th>
+                    <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Trip</th>
+                    <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Fuel/Exp</th>
+                    <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Analytics</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {rbacData.map((row) => (
+                    <tr
+                      key={row.roleKey}
+                      className={`hover:bg-gray-50/40 transition-colors ${
+                        userRole === row.roleKey ? 'bg-gray-50 font-medium' : ''
+                      }`}
+                    >
+                      <td className="py-3.5 px-6 font-medium text-gray-900 flex items-center gap-2 whitespace-nowrap">
+                        {row.role}
+                        {userRole === row.roleKey && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#ff385c]/10 text-[#ff385c]">
+                            You
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-6 text-center">{getPermissionBadge(row.fleet)}</td>
+                      <td className="py-3.5 px-6 text-center">{getPermissionBadge(row.driver)}</td>
+                      <td className="py-3.5 px-6 text-center">{getPermissionBadge(row.trip)}</td>
+                      <td className="py-3.5 px-6 text-center">{getPermissionBadge(row.fuel)}</td>
+                      <td className="py-3.5 px-6 text-center">{getPermissionBadge(row.analytics)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100 flex items-start gap-3">
+              <Activity className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-xs font-semibold text-gray-900">Security Enforcement Notice</h4>
+                <p className="text-[11px] text-gray-500 mt-0.5 leading-relaxed">
+                  These authorization limits are strictly enforced at the database level and server API routes.
+                  Any operations requested outside your assigned role permissions will be rejected. Contact system administrator to request privilege elevation.
+                </p>
+              </div>
+            </div>
+          </div>
+>>>>>>> Stashed changes
         </div>
       </div>
     </div>

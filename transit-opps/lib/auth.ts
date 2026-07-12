@@ -10,6 +10,7 @@ export interface JwtPayload {
   email: string;
   role: UserRole;
   name: string;
+  driverId?: string | null;
 }
 
 export function signToken(payload: JwtPayload): string {
@@ -18,6 +19,23 @@ export function signToken(payload: JwtPayload): string {
 
 export function verifyToken(token: string): JwtPayload {
   return jwt.verify(token, JWT_SECRET) as JwtPayload;
+}
+
+export interface SetupPasswordPayload {
+  email: string;
+  purpose: 'setup-password';
+}
+
+export function signSetupToken(email: string): string {
+  return jwt.sign({ email, purpose: 'setup-password' }, JWT_SECRET, { expiresIn: '24h' });
+}
+
+export function verifySetupToken(token: string): SetupPasswordPayload {
+  const decoded = jwt.verify(token, JWT_SECRET) as any;
+  if (decoded.purpose !== 'setup-password') {
+    throw new Error('Invalid token purpose');
+  }
+  return decoded as SetupPasswordPayload;
 }
 
 export async function hashPassword(plain: string): Promise<string> {

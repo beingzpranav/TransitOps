@@ -6,6 +6,7 @@ import { TripCompletedEmail } from '../components/emails/TripCompletedEmail';
 import { MaintenanceOpenedEmail } from '../components/emails/MaintenanceOpenedEmail';
 import { MaintenanceClosedEmail } from '../components/emails/MaintenanceClosedEmail';
 import { DriverSuspendedEmail } from '../components/emails/DriverSuspendedEmail';
+import { DriverWelcomeEmail } from '../components/emails/DriverWelcomeEmail';
 
 let transporter: nodemailer.Transporter | null = null;
 
@@ -63,6 +64,9 @@ async function getEmailHtml(templateName: string, props: any): Promise<string> {
       break;
     case 'driver_suspended':
       element = React.createElement(DriverSuspendedEmail, props);
+      break;
+    case 'driver_welcome':
+      element = React.createElement(DriverWelcomeEmail, props);
       break;
     default:
       throw new Error(`Unknown email template: ${templateName}`);

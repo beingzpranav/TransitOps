@@ -53,6 +53,9 @@ export async function getDriver(id: string) {
   return driver;
 }
 
+import bcrypt from 'bcryptjs';
+import { signSetupToken } from '@/lib/auth';
+
 export async function createDriver(data: z.infer<typeof createDriverSchema>) {
   const existing = await prisma.driver.findUnique({
     where: { licenseNumber: data.licenseNumber },
@@ -64,18 +67,71 @@ export async function createDriver(data: z.infer<typeof createDriverSchema>) {
     );
   }
 
-  return prisma.driver.create({
-    data: {
-      name: data.name,
-      licenseNumber: data.licenseNumber,
-      licenseCategory: data.licenseCategory,
-      licenseExpiry: new Date(data.licenseExpiry),
-      contactNumber: data.contactNumber,
-      email: data.email || null,
-      safetyScore: data.safetyScore,
-      status: data.status as DriverStatus,
-    },
+  if (data.email) {
+    const existingUser = await prisma.user.findUnique({
+      where: { email: data.email },
+    });
+    if (existingUser) {
+      throw new ServiceError(
+        `A user account with email "${data.email}" already exists`,
+        409
+      );
+    }
+  }
+
+  const driver = await prisma.$transaction(async (tx) => {
+    const driver = await tx.driver.create({
+      data: {
+        name: data.name,
+        licenseNumber: data.licenseNumber,
+        licenseCategory: data.licenseCategory,
+        licenseExpiry: new Date(data.licenseExpiry),
+        contactNumber: data.contactNumber,
+        email: data.email || null,
+        safetyScore: data.safetyScore,
+        status: data.status as DriverStatus,
+      },
+    });
+
+    if (data.email) {
+      const passwordHash = await bcrypt.hash('Password123!', 12);
+      await tx.user.create({
+        data: {
+          email: data.email,
+          passwordHash,
+          name: data.name,
+          role: 'DRIVER', // Drivers get their own dedicated role
+          driverId: driver.id,
+        },
+      });
+    }
+
+    return driver;
   });
+
+  // Send welcome email with setup password link if email was provided
+  if (data.email) {
+    try {
+      const setupToken = signSetupToken(data.email);
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const setupUrl = `${appUrl}/setup-password?token=${setupToken}`;
+
+      await sendEmail({
+        to: data.email,
+        subject: 'Welcome to TransitOps — Set Up Your Password',
+        templateName: 'driver_welcome',
+        props: {
+          driverName: data.name,
+          setupUrl,
+        },
+        triggerEvent: 'Driver Registered',
+      });
+    } catch (err) {
+      console.error('Failed to send welcome email:', err);
+    }
+  }
+
+  return driver;
 }
 
 export async function updateDriver(
@@ -93,6 +149,19 @@ export async function updateDriver(
     );
   }
 
+  // If email is changing, verify no duplicate User exists (excluding current linked user)
+  if (data.email) {
+    const existingUser = await prisma.user.findUnique({
+      where: { email: data.email },
+    });
+    if (existingUser && existingUser.driverId !== id) {
+      throw new ServiceError(
+        `A user account with email "${data.email}" already exists`,
+        409
+      );
+    }
+  }
+
   const updatedDriver = await prisma.driver.update({
     where: { id },
     data: {
@@ -106,6 +175,54 @@ export async function updateDriver(
       ...(data.status !== undefined ? { status: data.status as DriverStatus } : {}),
     },
   });
+
+  // Sync with User credentials
+  if (data.email !== undefined || data.name !== undefined) {
+    const linkedUser = await prisma.user.findFirst({
+      where: { driverId: id },
+    });
+    if (linkedUser) {
+      await prisma.user.update({
+        where: { id: linkedUser.id },
+        data: {
+          ...(data.email !== undefined ? { email: data.email || undefined } : {}),
+          ...(data.name !== undefined ? { name: data.name } : {}),
+        },
+      });
+    } else if (data.email) {
+      // Create user if they didn't have one and email was added
+      const passwordHash = await bcrypt.hash('Password123!', 12);
+      await prisma.user.create({
+        data: {
+          email: data.email,
+          passwordHash,
+          name: data.name ?? updatedDriver.name,
+          role: 'DRIVER',
+          driverId: id,
+        },
+      });
+
+      // Also send them a setup link!
+      try {
+        const setupToken = signSetupToken(data.email);
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const setupUrl = `${appUrl}/setup-password?token=${setupToken}`;
+
+        await sendEmail({
+          to: data.email,
+          subject: 'Welcome to TransitOps — Set Up Your Password',
+          templateName: 'driver_welcome',
+          props: {
+            driverName: data.name ?? updatedDriver.name,
+            setupUrl,
+          },
+          triggerEvent: 'Driver Registered',
+        });
+      } catch (err) {
+        console.error('Failed to send welcome email:', err);
+      }
+    }
+  }
 
   if (data.status === 'Suspended' && driver.status !== DriverStatus.Suspended) {
     try {

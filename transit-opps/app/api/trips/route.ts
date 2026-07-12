@@ -10,9 +10,14 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status') as TripStatus | null;
     const vehicleId = searchParams.get('vehicleId');
-    const driverId = searchParams.get('driverId');
 
-    // DISPATCHER sees only their own trips
+    // DRIVER sees only trips assigned to them
+    let driverId = searchParams.get('driverId') ?? undefined;
+    if (user.role === UserRole.DRIVER && user.driverId) {
+      driverId = user.driverId;
+    }
+
+    // DISPATCHER sees only their own created trips
     const createdById =
       user.role === UserRole.DISPATCHER ? user.userId : searchParams.get('createdById') ?? undefined;
 

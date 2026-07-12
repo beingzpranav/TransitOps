@@ -35,6 +35,7 @@ const roleLabels: Record<string, string> = {
   DISPATCHER: 'Dispatcher',
   SAFETY_OFFICER: 'Safety Officer',
   FINANCIAL_ANALYST: 'Financial Analyst',
+  DRIVER: 'Driver',
 };
 
 const roleColors: Record<string, string> = {
@@ -42,6 +43,7 @@ const roleColors: Record<string, string> = {
   DISPATCHER: 'bg-emerald-500',
   SAFETY_OFFICER: 'bg-amber-500',
   FINANCIAL_ANALYST: 'bg-violet-500',
+  DRIVER: 'bg-orange-500',
 };
 
 // Role-aware navigation
@@ -50,6 +52,7 @@ function getNavItems(role: string) {
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['FLEET_MANAGER', 'DISPATCHER', 'SAFETY_OFFICER', 'FINANCIAL_ANALYST'] },
     { href: '/dashboard/vehicles', icon: Truck, label: 'Vehicles', roles: ['FLEET_MANAGER', 'DISPATCHER', 'SAFETY_OFFICER', 'FINANCIAL_ANALYST'] },
     { href: '/dashboard/drivers', icon: Users, label: 'Drivers', roles: ['FLEET_MANAGER', 'DISPATCHER', 'SAFETY_OFFICER', 'FINANCIAL_ANALYST'] },
+    { href: '/dashboard/trips', icon: MapPin, label: 'My Trips', roles: ['DRIVER'] },
     { href: '/dashboard/trips', icon: MapPin, label: 'Trips', roles: ['FLEET_MANAGER', 'DISPATCHER', 'SAFETY_OFFICER', 'FINANCIAL_ANALYST'] },
     { href: '/dashboard/maintenance', icon: Wrench, label: 'Maintenance', roles: ['FLEET_MANAGER', 'DISPATCHER', 'SAFETY_OFFICER', 'FINANCIAL_ANALYST'] },
     { href: '/dashboard/fuel-expenses', icon: Fuel, label: 'Fuel & Expenses', roles: ['FLEET_MANAGER', 'DISPATCHER', 'FINANCIAL_ANALYST'] },
@@ -139,7 +142,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-[#dddddd]">
         <div className="p-2 rounded-xl bg-[#ff385c]/10">
-          <img src="Transit Ops Logo.png" alt="Logo" className="w-7 h-7" height={50} width={50} />
+          <img src="/Transit Ops Logo.png" alt="Logo" className="w-7 h-7" height={50} width={50} />
         </div>
         <div>
           <p className="font-bold text-[#222222] text-sm">TransitOps</p>

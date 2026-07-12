@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Plus, Search, MapPin, Play, CheckCircle, XCircle } from 'lucide-react';
 import { useTrips, useCreateTrip, useDispatchTrip, useCompleteTrip, useCancelTrip, Trip } from '@/hooks/useTrips';
 import { useVehicles } from '@/hooks/useVehicles';
@@ -13,6 +14,113 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+interface GeocodeSuggestion {
+  display_name: string;
+  lat: string;
+  lon: string;
+}
+
+function LocationAutocomplete({
+  id,
+  value,
+  onChange,
+  placeholder,
+}: {
+  id: string;
+  value: string;
+  onChange: (val: string, coords: { lat: string; lon: string } | null) => void;
+  placeholder: string;
+}) {
+  const [query, setQuery] = useState(value);
+  const [suggestions, setSuggestions] = useState<GeocodeSuggestion[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setQuery(value);
+  }, [value]);
+
+  useEffect(() => {
+    if (!query || query.trim().length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    if (query === value) {
+      return;
+    }
+
+    setLoading(true);
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const token = localStorage.getItem('transitops_token');
+        const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setSuggestions(data);
+        }
+      } catch (err) {
+        console.error("Geocoding fetch failed", err);
+      } finally {
+        setLoading(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounce);
+  }, [query, value]);
+
+  return (
+    <div className="relative mt-1">
+      <Input
+        id={id}
+        value={query}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setOpen(true);
+          if (e.target.value === '') {
+            onChange('', null);
+          }
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => {
+          setTimeout(() => setOpen(false), 200);
+        }}
+        placeholder={placeholder}
+        required
+        autoComplete="off"
+        className="w-full"
+      />
+      {open && (loading || suggestions.length > 0) && (
+        <div className="absolute z-50 w-full bg-white border border-gray-100 rounded-xl shadow-lg mt-1 max-h-60 overflow-y-auto divide-y divide-gray-50">
+          {loading && (
+            <div className="px-4 py-3 text-xs text-gray-400 flex items-center gap-2">
+              <span className="w-3.5 h-3.5 border-2 border-[#ff385c] border-t-transparent rounded-full animate-spin" />
+              <span>Searching locations...</span>
+            </div>
+          )}
+          {!loading && suggestions.map((s, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => {
+                setQuery(s.display_name);
+                onChange(s.display_name, { lat: s.lat, lon: s.lon });
+                setSuggestions([]);
+                setOpen(false);
+              }}
+              className="w-full text-left px-4 py-2.5 text-xs text-gray-700 hover:bg-gray-50 transition-colors focus:bg-gray-50 focus:outline-none"
+            >
+              {s.display_name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CreateTripForm({ onSubmit, loading }: { onSubmit: (data: Partial<Trip>) => void; loading: boolean }) {
   const { data: vehicles = [] } = useVehicles({ status: 'Available' });
   const { data: drivers = [] } = useDrivers({ status: 'Available' });
@@ -20,6 +128,36 @@ function CreateTripForm({ onSubmit, loading }: { onSubmit: (data: Partial<Trip>)
     source: '', destination: '', vehicleId: '', driverId: '',
     cargoWeight: '', plannedDistance: '', revenuePerTrip: '',
   });
+
+  const [sourceCoords, setSourceCoords] = useState<{ lat: string; lon: string } | null>(null);
+  const [destCoords, setDestCoords] = useState<{ lat: string; lon: string } | null>(null);
+  const [calculatingDistance, setCalculatingDistance] = useState(false);
+
+  useEffect(() => {
+    if (!sourceCoords || !destCoords) return;
+
+    setCalculatingDistance(true);
+    const token = localStorage.getItem('transitops_token');
+
+    fetch(
+      `/api/geocode/distance?sourceLat=${sourceCoords.lat}&sourceLon=${sourceCoords.lon}&destLat=${destCoords.lat}&destLon=${destCoords.lon}`,
+      {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      }
+    )
+      .then((res) => {
+        if (!res.ok) throw new Error("Distance API failed");
+        return res.json();
+      })
+      .then((data) => {
+        setForm((prev) => ({
+          ...prev,
+          plannedDistance: String(data.distanceKm),
+        }));
+      })
+      .catch((err) => console.error("Failed to calculate distance:", err))
+      .finally(() => setCalculatingDistance(false));
+  }, [sourceCoords, destCoords]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,25 +181,46 @@ function CreateTripForm({ onSubmit, loading }: { onSubmit: (data: Partial<Trip>)
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="source" className="form-label">Source *</Label>
-          <Input id="source" value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="Chicago, IL" required className="mt-1" />
+          <LocationAutocomplete
+            id="source"
+            value={form.source}
+            onChange={(val, coords) => {
+              setForm({ ...form, source: val });
+              setSourceCoords(coords);
+            }}
+            placeholder="Search source (e.g. Jaipur)"
+          />
         </div>
         <div>
           <Label htmlFor="destination" className="form-label">Destination *</Label>
-          <Input id="destination" value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value })} placeholder="Detroit, MI" required className="mt-1" />
+          <LocationAutocomplete
+            id="destination"
+            value={form.destination}
+            onChange={(val, coords) => {
+              setForm({ ...form, destination: val });
+              setDestCoords(coords);
+            }}
+            placeholder="Search destination (e.g. Udaipur)"
+          />
         </div>
       </div>
       <div>
         <Label htmlFor="vehicle-select" className="form-label">Vehicle (Available only) *</Label>
         <Select value={form.vehicleId} onValueChange={(v) => setForm({ ...form, vehicleId: v ?? '' })}>
           <SelectTrigger id="vehicle-select" className="mt-1">
-            <SelectValue placeholder="Select an available vehicle" />
+            <SelectValue placeholder="Select an available vehicle">
+              {(value) => {
+                const v = vehicles.find((x) => x.id === value);
+                return v ? `${v.registrationNumber} — ${v.name}` : "Select an available vehicle";
+              }}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {vehicles.length === 0 ? (
               <SelectItem value="none" disabled>No available vehicles</SelectItem>
             ) : vehicles.map((v) => (
               <SelectItem key={v.id} value={v.id}>
-                {v.registrationNumber} — {v.name} (max {v.maxLoadCapacity.toLocaleString()} kg)
+                {`${v.registrationNumber} — ${v.name} (max ${v.maxLoadCapacity.toLocaleString()} kg)`}
               </SelectItem>
             ))}
           </SelectContent>
@@ -71,14 +230,19 @@ function CreateTripForm({ onSubmit, loading }: { onSubmit: (data: Partial<Trip>)
         <Label htmlFor="driver-select" className="form-label">Driver (Available, valid license) *</Label>
         <Select value={form.driverId} onValueChange={(v) => setForm({ ...form, driverId: v ?? '' })}>
           <SelectTrigger id="driver-select" className="mt-1">
-            <SelectValue placeholder="Select an available driver" />
+            <SelectValue placeholder="Select an available driver">
+              {(value) => {
+                const d = drivers.find((x) => x.id === value);
+                return d ? `${d.name} — ${d.licenseCategory}` : "Select an available driver";
+              }}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {availableDrivers.length === 0 ? (
               <SelectItem value="none" disabled>No available drivers with valid license</SelectItem>
             ) : availableDrivers.map((d) => (
               <SelectItem key={d.id} value={d.id}>
-                {d.name} — {d.licenseCategory} (expires {new Date(d.licenseExpiry).toLocaleDateString()})
+                {`${d.name} — ${d.licenseCategory} (expires ${new Date(d.licenseExpiry).toLocaleDateString()})`}
               </SelectItem>
             ))}
           </SelectContent>
@@ -93,8 +257,22 @@ function CreateTripForm({ onSubmit, loading }: { onSubmit: (data: Partial<Trip>)
           )}
         </div>
         <div>
-          <Label htmlFor="planned-distance" className="form-label">Distance (km) *</Label>
-          <Input id="planned-distance" type="number" value={form.plannedDistance} onChange={(e) => setForm({ ...form, plannedDistance: e.target.value })} placeholder="450" min="1" required className="mt-1" />
+          <Label htmlFor="planned-distance" className="form-label flex items-center justify-between">
+            <span>Distance (km) *</span>
+            {calculatingDistance && <span className="text-[10px] text-[#ff385c] animate-pulse">Calculating...</span>}
+          </Label>
+          <Input
+            id="planned-distance"
+            type="number"
+            step="any"
+            value={form.plannedDistance}
+            onChange={(e) => setForm({ ...form, plannedDistance: e.target.value })}
+            placeholder="450"
+            min="1"
+            required
+            className="mt-1"
+            disabled={calculatingDistance}
+          />
         </div>
         <div>
           <Label htmlFor="revenue" className="form-label">Revenue (₹)</Label>
@@ -155,6 +333,7 @@ function CompleteTripForm({ onSubmit, loading }: { onSubmit: (data: object) => v
 }
 
 export default function TripsPage() {
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
@@ -289,7 +468,7 @@ export default function TripsPage() {
                   <tr
                     key={t.id}
                     className="cursor-pointer hover:bg-gray-50/50 transition-colors"
-                    onClick={() => setViewTrip(t)}
+                    onClick={() => router.push(`/dashboard/trips/${t.id}`)}
                   >
                     <td>
                       <div className="font-medium text-gray-900">{t.source} <span className="text-gray-400">→</span> {t.destination}</div>

@@ -191,6 +191,22 @@ async function main() {
 
   console.log('✅ Drivers created');
 
+  // Link a driver user to Marcus Johnson (drivers[0])
+  await prisma.user.upsert({
+    where: { email: 'driver@transitops.com' },
+    update: {
+      role: UserRole.DRIVER,
+      driverId: drivers[0].id,
+    },
+    create: {
+      email: 'driver@transitops.com',
+      passwordHash,
+      name: 'Marcus Johnson',
+      role: UserRole.DRIVER,
+      driverId: drivers[0].id,
+    },
+  });
+
   // ─── Trips ────────────────────────────────────────────────────────────────
   const trip3 = await prisma.trip.create({
     data: {
@@ -305,6 +321,7 @@ async function main() {
   console.log('  Dispatcher:        dispatch@transitops.com');
   console.log('  Safety Officer:    safety@transitops.com');
   console.log('  Financial Analyst: finance@transitops.com');
+  console.log('  Driver:            driver@transitops.com');
 }
 
 main()

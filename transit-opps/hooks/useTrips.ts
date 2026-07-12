@@ -13,6 +13,7 @@ export interface Trip {
   cargoWeight: number;
   plannedDistance: number;
   status: 'Draft' | 'Dispatched' | 'Completed' | 'Cancelled';
+  actualStartTime?: string | null;
   finalOdometer?: number;
   fuelConsumed?: number;
   revenuePerTrip?: number;

@@ -18,7 +18,17 @@ export async function POST(req: NextRequest) {
 
     const { email, password } = parsed.data;
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        passwordHash: true,
+        name: true,
+        role: true,
+        driverId: true,
+      },
+    });
     if (!user) {
       // Generic message — do not reveal whether email exists
       return Response.json({ error: 'Invalid email or password' }, { status: 401 });
@@ -34,11 +44,18 @@ export async function POST(req: NextRequest) {
       email: user.email,
       role: user.role,
       name: user.name,
+      driverId: user.driverId,
     });
 
     return Response.json({
       token,
-      user: { id: user.id, email: user.email, role: user.role, name: user.name },
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        name: user.name,
+        driverId: user.driverId,
+      },
     });
   } catch (err) {
     console.error('[POST /api/auth/login]', err);
