@@ -169,7 +169,7 @@ export default function FuelExpensesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Fuel className="w-6 h-6 text-blue-500" />
+            <Fuel className="w-6 h-6 text-[#ff385c]" />
             Fuel & Expenses
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">Track operational costs across your fleet</p>
@@ -238,7 +238,7 @@ export default function FuelExpensesPage() {
                     fuelLogs.map((l: FuelLog) => (
                       <tr key={l.id}>
                         <td>
-                          <div className="font-mono text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded">{l.vehicle?.registrationNumber}</div>
+                          <div className="font-mono text-xs text-[#ff385c] bg-[#ff385c]/10 px-2 py-0.5 rounded w-fit">{l.vehicle?.registrationNumber}</div>
                           <div className="text-xs text-gray-400 mt-0.5">{l.vehicle?.name}</div>
                         </td>
                         <td className="text-gray-600 text-sm">{new Date(l.date).toLocaleDateString()}</td>
@@ -280,7 +280,7 @@ export default function FuelExpensesPage() {
                     expenses.map((e: Expense) => (
                       <tr key={e.id}>
                         <td>
-                          <div className="font-mono text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded">{e.vehicle?.registrationNumber}</div>
+                          <div className="font-mono text-xs text-[#ff385c] bg-[#ff385c]/10 px-2 py-0.5 rounded w-fit">{e.vehicle?.registrationNumber}</div>
                           <div className="text-xs text-gray-400 mt-0.5">{e.vehicle?.name}</div>
                         </td>
                         <td>

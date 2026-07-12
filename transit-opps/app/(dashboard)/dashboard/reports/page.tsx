@@ -42,8 +42,8 @@ function ChartCard({ title, icon: Icon, children, reportType, dateRange }: {
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-blue-50">
-            <Icon className="w-4 h-4 text-blue-500" />
+          <div className="p-2 rounded-xl bg-[#ff385c]/10">
+            <Icon className="w-4 h-4 text-[#ff385c]" />
           </div>
           <h3 className="font-semibold text-gray-900">{title}</h3>
         </div>
@@ -301,7 +301,7 @@ export default function ReportsPage() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <BarChart3 className="w-6 h-6 text-violet-500" />
+            <BarChart3 className="w-6 h-6 text-[#ff385c]" />
             Reports & Analytics
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">Visual analytics and exportable reports</p>

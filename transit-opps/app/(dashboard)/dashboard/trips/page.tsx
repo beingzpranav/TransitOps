@@ -159,6 +159,7 @@ export default function TripsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [completeTrip, setCompleteTrip] = useState<Trip | null>(null);
+  const [viewTrip, setViewTrip] = useState<Trip | null>(null);
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [dispatchId, setDispatchId] = useState<string | null>(null);
   const [formError, setFormError] = useState('');
@@ -233,7 +234,7 @@ export default function TripsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <MapPin className="w-6 h-6 text-blue-500" />
+            <MapPin className="w-6 h-6 text-[#ff385c]" />
             Trip Management
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">{trips.length} trips total</p>
@@ -285,7 +286,11 @@ export default function TripsPage() {
                 <tr><td colSpan={7} className="text-center py-12 text-gray-400">{search ? 'No trips match your search' : 'No trips yet'}</td></tr>
               ) : (
                 filtered.map((t) => (
-                  <tr key={t.id}>
+                  <tr
+                    key={t.id}
+                    className="cursor-pointer hover:bg-gray-50/50 transition-colors"
+                    onClick={() => setViewTrip(t)}
+                  >
                     <td>
                       <div className="font-medium text-gray-900">{t.source} <span className="text-gray-400">→</span> {t.destination}</div>
                       <div className="text-xs text-gray-400">{new Date(t.createdAt).toLocaleDateString()}</div>
@@ -300,20 +305,20 @@ export default function TripsPage() {
                         <div className="flex items-center justify-end gap-1">
                           {t.status === 'Draft' && (
                             <>
-                              <Button variant="ghost" size="sm" className="h-7 text-xs text-blue-600 hover:bg-blue-50" onClick={() => setDispatchId(t.id)} id={`dispatch-${t.id}`}>
+                              <Button variant="ghost" size="sm" className="h-7 text-xs text-[#ff385c] hover:bg-[#ff385c]/10" onClick={(e) => { e.stopPropagation(); setDispatchId(t.id); }} id={`dispatch-${t.id}`}>
                                 <Play className="w-3 h-3 mr-1" /> Dispatch
                               </Button>
-                              <Button variant="ghost" size="sm" className="h-7 text-xs text-red-500 hover:bg-red-50" onClick={() => setCancelId(t.id)} id={`cancel-${t.id}`}>
+                              <Button variant="ghost" size="sm" className="h-7 text-xs text-red-500 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); setCancelId(t.id); }} id={`cancel-${t.id}`}>
                                 <XCircle className="w-3 h-3 mr-1" /> Cancel
                               </Button>
                             </>
                           )}
                           {t.status === 'Dispatched' && (
                             <>
-                              <Button variant="ghost" size="sm" className="h-7 text-xs text-emerald-600 hover:bg-emerald-50" onClick={() => { setFormError(''); setCompleteTrip(t); }} id={`complete-${t.id}`}>
+                              <Button variant="ghost" size="sm" className="h-7 text-xs text-emerald-600 hover:bg-emerald-50" onClick={(e) => { e.stopPropagation(); setFormError(''); setCompleteTrip(t); }} id={`complete-${t.id}`}>
                                 <CheckCircle className="w-3 h-3 mr-1" /> Complete
                               </Button>
-                              <Button variant="ghost" size="sm" className="h-7 text-xs text-red-500 hover:bg-red-50" onClick={() => setCancelId(t.id)} id={`cancel-dispatched-${t.id}`}>
+                              <Button variant="ghost" size="sm" className="h-7 text-xs text-red-500 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); setCancelId(t.id); }} id={`cancel-dispatched-${t.id}`}>
                                 <XCircle className="w-3 h-3 mr-1" /> Cancel
                               </Button>
                             </>
@@ -372,6 +377,95 @@ export default function TripsPage() {
         onConfirm={handleCancel}
         loading={cancelTripMut.isPending}
       />
+
+      {/* View Trip Details Dialog */}
+      <Dialog open={!!viewTrip} onOpenChange={(o) => !o && setViewTrip(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-[#ff385c]" />
+              Trip Details
+            </DialogTitle>
+          </DialogHeader>
+          {viewTrip && (
+            <div className="space-y-4 pt-2">
+              <div className="border-b border-gray-100 pb-3">
+                <span className="text-xs text-gray-400 block font-medium">Route</span>
+                <span className="text-base font-semibold text-gray-900">
+                  {viewTrip.source} → {viewTrip.destination}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-4 border-b border-gray-100 pb-3">
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Status</span>
+                  <span className="block mt-0.5"><StatusBadge status={viewTrip.status} /></span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Created At</span>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {new Date(viewTrip.createdAt).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 border-b border-gray-100 pb-3">
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Assigned Driver</span>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {viewTrip.driver?.name ?? '—'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Assigned Vehicle</span>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {viewTrip.vehicle?.registrationNumber ? `${viewTrip.vehicle.registrationNumber} (${viewTrip.vehicle.name})` : '—'}
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4 border-b border-gray-100 pb-3">
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Cargo Weight</span>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {viewTrip.cargoWeight.toLocaleString()} kg
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Planned Distance</span>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {viewTrip.plannedDistance.toLocaleString()} km
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Expected Revenue</span>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {viewTrip.revenuePerTrip != null ? `$${viewTrip.revenuePerTrip.toLocaleString()}` : '—'}
+                  </span>
+                </div>
+              </div>
+              {viewTrip.status === 'Completed' && (
+                <div className="bg-emerald-50/50 border border-emerald-100 rounded-lg p-3 space-y-2">
+                  <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider block">Completion Details</span>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <span className="text-gray-400 block">Final Odometer</span>
+                      <span className="font-semibold text-emerald-900">{viewTrip.finalOdometer?.toLocaleString() ?? '—'} km</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block">Fuel Consumed</span>
+                      <span className="font-semibold text-emerald-900">{viewTrip.fuelConsumed?.toLocaleString() ?? '—'} L</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block">Fuel Cost</span>
+                      <span className="font-semibold text-emerald-900">
+                        {viewTrip.fuelLogs?.[0]?.cost != null ? `$${viewTrip.fuelLogs[0].cost.toLocaleString()}` : '—'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

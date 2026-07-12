@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { VehicleStatus, DriverStatus, TripStatus } from '@/app/generated/prisma/client';
 import { ServiceError } from './vehicle.service';
+import { sendEmail } from '@/lib/mail';
+import { createNotification } from '@/lib/notifications';
 
 // ─── Validation Schemas ────────────────────────────────────────────────────
 
@@ -92,6 +94,7 @@ export async function listTrips(filters?: {
       vehicle: { select: { id: true, registrationNumber: true, name: true } },
       driver: { select: { id: true, name: true, licenseNumber: true } },
       createdBy: { select: { id: true, name: true, email: true } },
+      fuelLogs: true,
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -139,7 +142,7 @@ export async function createTrip(
 
 export async function dispatchTrip(tripId: string) {
   // Run everything in a single transaction to prevent double-booking
-  return prisma.$transaction(async (tx) => {
+  const updatedTrip = await prisma.$transaction(async (tx) => {
     const trip = await tx.trip.findUnique({
       where: { id: tripId },
       include: { vehicle: true, driver: true },
@@ -176,7 +179,7 @@ export async function dispatchTrip(tripId: string) {
     }
 
     // Atomic: update trip + vehicle + driver in one transaction
-    const [updatedTrip] = await Promise.all([
+    const [res] = await Promise.all([
       tx.trip.update({
         where: { id: tripId },
         data: { status: TripStatus.Dispatched },
@@ -195,15 +198,72 @@ export async function dispatchTrip(tripId: string) {
       }),
     ]);
 
-    return updatedTrip;
+    // Trigger basic in-app notification
+    createNotification(
+      `Trip from ${updatedTrip.source} to ${updatedTrip.destination} has been dispatched.`,
+      'Trip Dispatched'
+    );
+
+    return res;
   });
+
+  // Asynchronously trigger driver dispatch email notification
+  try {
+    const fullTrip = await prisma.trip.findUnique({
+      where: { id: updatedTrip.id },
+      include: { driver: true, vehicle: true, createdBy: true },
+    });
+    if (fullTrip && fullTrip.driver) {
+      const driverEmail = `${fullTrip.driver.name.toLowerCase().replace(/\s+/g, '.')}@transitops-driver.com`;
+      
+      // Email to driver
+      sendEmail({
+        to: driverEmail,
+        subject: `New Trip Assignment: ${fullTrip.source} to ${fullTrip.destination}`,
+        templateName: 'trip_dispatched',
+        props: {
+          driverName: fullTrip.driver.name,
+          source: fullTrip.source,
+          destination: fullTrip.destination,
+          vehicleReg: fullTrip.vehicle.registrationNumber,
+          vehicleName: fullTrip.vehicle.name,
+          cargoWeight: fullTrip.cargoWeight,
+          plannedDistance: fullTrip.plannedDistance,
+        },
+        triggerEvent: 'Trip Dispatched',
+      });
+
+      // Email to dispatcher/creator's respective email id
+      if (fullTrip.createdBy?.email) {
+        sendEmail({
+          to: fullTrip.createdBy.email,
+          subject: `Trip Dispatched Confirmation: ${fullTrip.source} to ${fullTrip.destination}`,
+          templateName: 'trip_dispatched',
+          props: {
+            driverName: fullTrip.driver.name,
+            source: fullTrip.source,
+            destination: fullTrip.destination,
+            vehicleReg: fullTrip.vehicle.registrationNumber,
+            vehicleName: fullTrip.vehicle.name,
+            cargoWeight: fullTrip.cargoWeight,
+            plannedDistance: fullTrip.plannedDistance,
+          },
+          triggerEvent: 'Trip Dispatched',
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Failed to send trip dispatch email:', err);
+  }
+
+  return updatedTrip;
 }
 
 export async function completeTrip(
   tripId: string,
   data: z.infer<typeof completeTripSchema>
 ) {
-  return prisma.$transaction(async (tx) => {
+  const updatedTrip = await prisma.$transaction(async (tx) => {
     const trip = await tx.trip.findUnique({
       where: { id: tripId },
       include: { vehicle: true, driver: true },
@@ -217,7 +277,7 @@ export async function completeTrip(
     const revenue = data.revenuePerTrip ?? trip.revenuePerTrip ?? undefined;
 
     // Atomic: complete trip + restore vehicle+driver + create fuel log
-    const [updatedTrip] = await Promise.all([
+    const [res] = await Promise.all([
       tx.trip.update({
         where: { id: tripId },
         data: {
@@ -253,8 +313,74 @@ export async function completeTrip(
       }),
     ]);
 
-    return updatedTrip;
+    // Trigger basic in-app notification
+    createNotification(
+      `Trip from ${updatedTrip.source} to ${updatedTrip.destination} has been completed successfully.`,
+      'Trip Completed'
+    );
+
+    return res;
   });
+
+  // Asynchronously trigger completed email notification to the manager/dispatcher
+  try {
+    const fullTrip = await prisma.trip.findUnique({
+      where: { id: updatedTrip.id },
+      include: { driver: true, vehicle: true, createdBy: true },
+    });
+    if (fullTrip && fullTrip.driver) {
+      // Email to the creator's respective email id
+      if (fullTrip.createdBy?.email) {
+        sendEmail({
+          to: fullTrip.createdBy.email,
+          subject: `Trip Completed Summary: ${fullTrip.source} to ${fullTrip.destination}`,
+          templateName: 'trip_completed',
+          props: {
+            tripId: fullTrip.id,
+            source: fullTrip.source,
+            destination: fullTrip.destination,
+            driverName: fullTrip.driver.name,
+            vehicleReg: fullTrip.vehicle.registrationNumber,
+            vehicleName: fullTrip.vehicle.name,
+            finalOdometer: data.finalOdometer,
+            fuelConsumed: data.fuelConsumed,
+            fuelCost: data.fuelCost,
+            revenue: updatedTrip.revenuePerTrip ?? 0,
+          },
+          triggerEvent: 'Trip Completed',
+        });
+      }
+
+      // Also send a copy to all Fleet Managers on their respective email ids
+      const managers = await prisma.user.findMany({
+        where: { role: 'FLEET_MANAGER', email: { not: fullTrip.createdBy?.email } },
+      });
+      for (const m of managers) {
+        sendEmail({
+          to: m.email,
+          subject: `[Fleet Ops Alert] Trip Completed Summary: ${fullTrip.source} to ${fullTrip.destination}`,
+          templateName: 'trip_completed',
+          props: {
+            tripId: fullTrip.id,
+            source: fullTrip.source,
+            destination: fullTrip.destination,
+            driverName: fullTrip.driver.name,
+            vehicleReg: fullTrip.vehicle.registrationNumber,
+            vehicleName: fullTrip.vehicle.name,
+            finalOdometer: data.finalOdometer,
+            fuelConsumed: data.fuelConsumed,
+            fuelCost: data.fuelCost,
+            revenue: updatedTrip.revenuePerTrip ?? 0,
+          },
+          triggerEvent: 'Trip Completed',
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Failed to send trip completed email:', err);
+  }
+
+  return updatedTrip;
 }
 
 export async function cancelTrip(tripId: string) {
@@ -299,6 +425,12 @@ export async function cancelTrip(tripId: string) {
     }
 
     await Promise.all(ops);
+
+    // Trigger basic in-app notification
+    createNotification(
+      `Trip from ${trip.source} to ${trip.destination} has been cancelled.`,
+      'Trip Cancelled'
+    );
 
     return { id: tripId, status: TripStatus.Cancelled };
   });

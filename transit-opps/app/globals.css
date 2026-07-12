@@ -4,34 +4,34 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 0 0% 13.3%; /* Ink #222222 */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 13.3%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.75rem;
+    --popover-foreground: 0 0% 13.3%;
+    --primary: 349 100% 61.2%; /* Rausch #ff385c */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96.9%; /* Surface Soft #f7f7f7 */
+    --secondary-foreground: 0 0% 13.3%;
+    --muted: 0 0% 96.9%;
+    --muted-foreground: 0 0% 41.6%; /* Muted #6a6a6a */
+    --accent: 0 0% 96.9%;
+    --accent-foreground: 0 0% 13.3%;
+    --destructive: 349 100% 61.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 86.7%; /* Hairline #dddddd */
+    --input: 0 0% 86.7%;
+    --ring: 349 100% 61.2%;
+    --radius: 8px; /* 8px for button-md/text-input */
 
     /* TransitOps custom tokens */
-    --sidebar-bg: 222 47% 11%;
-    --sidebar-text: 210 40% 96%;
-    --sidebar-accent: 217 91% 60%;
-    --sidebar-border: 217 33% 17%;
+    --sidebar-bg: 0 0% 100%; /* Pure white sidebar per Airbnb light theme */
+    --sidebar-text: 0 0% 41.6%;
+    --sidebar-accent: 349 100% 61.2%;
+    --sidebar-border: 0 0% 86.7%;
     --emerald: 160 84% 39%;
     --amber: 45 93% 47%;
-    --rose: 347 77% 50%;
+    --rose: 349 77% 50%;
     --violet: 263 70% 50%;
   }
 
@@ -42,7 +42,7 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
   }
@@ -63,37 +63,37 @@
   border-radius: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: hsl(210 40% 75%);
+  color: hsl(var(--muted-foreground));
   transition: all 0.15s ease;
   text-decoration: none;
   margin: 0.125rem 0;
 }
 
 .sidebar-link:hover {
-  background: hsl(217 33% 17%);
-  color: hsl(var(--sidebar-text));
+  background: hsl(var(--secondary));
+  color: hsl(var(--foreground));
 }
 
 .sidebar-link.active {
-  background: hsl(221 83% 53% / 0.2);
-  color: hsl(var(--sidebar-accent));
-  border-left: 3px solid hsl(var(--sidebar-accent));
+  background: hsl(var(--primary) / 0.08);
+  color: hsl(var(--primary));
+  border-left: 3px solid hsl(var(--primary));
 }
 
 /* ─── KPI Cards ──────────────────────────────────────────────────────────── */
 .kpi-card {
   background: white;
-  border-radius: 1rem;
+  border-radius: 0.875rem; /* 14px */
   padding: 1.5rem;
   border: 1px solid hsl(var(--border));
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+  box-shadow: rgba(0, 0, 0, 0.04) 0 2px 6px;
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
 }
 
 .kpi-card:hover {
-  box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.1);
+  box-shadow: rgba(0, 0, 0, 0.1) 0 4px 12px;
   transform: translateY(-1px);
 }
 
@@ -104,7 +104,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, hsl(var(--sidebar-accent)), hsl(160 84% 39%));
+  background: hsl(var(--primary));
 }
 
 /* ─── Status Badges ──────────────────────────────────────────────────────── */

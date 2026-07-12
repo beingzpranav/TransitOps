@@ -61,6 +61,7 @@ function OpenMaintenanceForm({ onSubmit, loading }: { onSubmit: (data: object) =
 export default function MaintenancePage() {
   const [openDialog, setOpenDialog] = useState(false);
   const [closeId, setCloseId] = useState<string | null>(null);
+  const [viewLog, setViewLog] = useState<MaintenanceLog | null>(null);
   const [formError, setFormError] = useState('');
   const [userRole, setUserRole] = useState<string>('');
 
@@ -101,9 +102,12 @@ export default function MaintenancePage() {
 
   function LogRow({ log, showClose }: { log: MaintenanceLog; showClose: boolean }) {
     return (
-      <tr>
+      <tr
+        className="cursor-pointer hover:bg-gray-50/50 transition-colors"
+        onClick={() => setViewLog(log)}
+      >
         <td>
-          <div className="font-mono font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded text-xs">
+          <div className="font-mono font-semibold text-[#ff385c] bg-[#ff385c]/10 px-2 py-0.5 rounded text-xs w-fit">
             {log.vehicle?.registrationNumber}
           </div>
           <div className="text-xs text-gray-400 mt-0.5">{log.vehicle?.name}</div>
@@ -128,7 +132,7 @@ export default function MaintenancePage() {
         {isFleetManager && (
           <td>
             {showClose && (
-              <Button variant="ghost" size="sm" className="h-7 text-xs text-emerald-600 hover:bg-emerald-50" onClick={() => setCloseId(log.id)} id={`close-maintenance-${log.id}`}>
+              <Button variant="ghost" size="sm" className="h-7 text-xs text-emerald-600 hover:bg-emerald-50" onClick={(e) => { e.stopPropagation(); setCloseId(log.id); }} id={`close-maintenance-${log.id}`}>
                 <CheckCircle className="w-3 h-3 mr-1" /> Close
               </Button>
             )}
@@ -143,7 +147,7 @@ export default function MaintenancePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Wrench className="w-6 h-6 text-amber-500" />
+            <Wrench className="w-6 h-6 text-[#ff385c]" />
             Maintenance Logs
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">{active.length} active — {closed.length} closed</p>
@@ -237,10 +241,79 @@ export default function MaintenancePage() {
         title="Close Maintenance Record"
         description="This will close the maintenance record and restore the vehicle to Available status (unless Retired)."
         confirmLabel="Close Maintenance"
-        variant="default"
         onConfirm={handleClose}
         loading={closeMaintenance.isPending}
       />
+
+      {/* View Maintenance Details Dialog */}
+      <Dialog open={!!viewLog} onOpenChange={(o) => !o && setViewLog(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Wrench className="w-5 h-5 text-[#ff385c]" />
+              Maintenance Details
+            </DialogTitle>
+          </DialogHeader>
+          {viewLog && (
+            <div className="space-y-4 pt-2">
+              <div className="grid grid-cols-2 gap-4 border-b border-gray-100 pb-3">
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Vehicle Registration</span>
+                  <span className="text-sm font-mono font-semibold text-[#ff385c]">
+                    {viewLog.vehicle?.registrationNumber ?? '—'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Vehicle Name</span>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {viewLog.vehicle?.name ?? '—'}
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 border-b border-gray-100 pb-3">
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Status</span>
+                  <span className="block mt-0.5">
+                    {viewLog.isActive ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                        <Clock className="w-3 h-3" /> Active
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                        <CheckCircle className="w-3 h-3" /> Closed
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Total Cost</span>
+                  <span className="text-sm font-semibold text-gray-900">${viewLog.cost.toLocaleString()}</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 border-b border-gray-100 pb-3">
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Date Opened</span>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {new Date(viewLog.dateOpened).toLocaleString()}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Date Closed</span>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {viewLog.dateClosed ? new Date(viewLog.dateClosed).toLocaleString() : '—'}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <span className="text-xs text-gray-400 block font-medium mb-1">Detailed Description</span>
+                <div className="bg-[#f7f7f7] border border-[#dddddd] rounded-lg p-3 text-sm text-gray-800 whitespace-pre-wrap">
+                  {viewLog.description}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

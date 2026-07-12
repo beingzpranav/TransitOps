@@ -23,7 +23,7 @@ export default function DashboardPage() {
   const recentTrips = trips?.slice(0, 5) ?? [];
 
   const utilizationData = kpis ? [
-    { name: 'On Trip', value: kpis.vehiclesOnTrip, fill: '#3b82f6' },
+    { name: 'On Trip', value: kpis.vehiclesOnTrip, fill: '#ff385c' },
     { name: 'Available', value: kpis.availableVehicles, fill: '#10b981' },
     { name: 'In Maintenance', value: kpis.vehiclesInMaintenance, fill: '#f59e0b' },
   ] : [];
@@ -76,56 +76,56 @@ export default function DashboardPage() {
             title="Total Vehicles"
             value={kpis.totalVehicles}
             icon={Truck}
-            iconColor="text-blue-500"
+            iconColor="text-[#ff385c]"
             subtitle={`${kpis.activeVehicles} active`}
           />
           <KpiCard
             title="Available Vehicles"
             value={kpis.availableVehicles}
             icon={Truck}
-            iconColor="text-emerald-500"
+            iconColor="text-emerald-600"
             subtitle="Ready for dispatch"
           />
           <KpiCard
             title="In Maintenance"
             value={kpis.vehiclesInMaintenance}
             icon={Wrench}
-            iconColor="text-amber-500"
+            iconColor="text-amber-600"
             subtitle="In shop now"
           />
           <KpiCard
             title="Fleet Utilization"
             value={`${kpis.fleetUtilization}%`}
             icon={Activity}
-            iconColor="text-violet-500"
+            iconColor="text-[#ff385c]"
             subtitle="Vehicles on trip"
           />
           <KpiCard
             title="Active Trips"
             value={kpis.activeTrips}
             icon={MapPin}
-            iconColor="text-blue-500"
+            iconColor="text-[#ff385c]"
             subtitle="Currently dispatched"
           />
           <KpiCard
             title="Pending Trips"
             value={kpis.pendingTrips}
             icon={Clock}
-            iconColor="text-orange-500"
+            iconColor="text-amber-600"
             subtitle="Awaiting dispatch"
           />
           <KpiCard
             title="Drivers on Duty"
             value={kpis.driversOnDuty}
             icon={Users}
-            iconColor="text-emerald-500"
+            iconColor="text-emerald-600"
             subtitle="Currently on trip"
           />
           <KpiCard
             title="Total Drivers"
             value={kpis.totalDrivers}
             icon={Users}
-            iconColor="text-gray-500"
+            iconColor="text-gray-600"
             subtitle="In the system"
           />
         </div>
@@ -173,10 +173,10 @@ export default function DashboardPage() {
           {kpis ? (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={[
-                { name: 'Total', count: kpis.totalVehicles, fill: '#e2e8f0' },
-                { name: 'Active', count: kpis.activeVehicles, fill: '#3b82f6' },
+                { name: 'Total', count: kpis.totalVehicles, fill: '#f2f2f2' },
+                { name: 'Active', count: kpis.activeVehicles, fill: '#ff385c' },
                 { name: 'Available', count: kpis.availableVehicles, fill: '#10b981' },
-                { name: 'On Trip', count: kpis.vehiclesOnTrip, fill: '#6366f1' },
+                { name: 'On Trip', count: kpis.vehiclesOnTrip, fill: '#ff385c' },
                 { name: 'In Shop', count: kpis.vehiclesInMaintenance, fill: '#f59e0b' },
               ]}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -184,7 +184,7 @@ export default function DashboardPage() {
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {[{ fill: '#e2e8f0' }, { fill: '#3b82f6' }, { fill: '#10b981' }, { fill: '#6366f1' }, { fill: '#f59e0b' }].map((entry, index) => (
+                  {[{ fill: '#f2f2f2' }, { fill: '#ff385c' }, { fill: '#10b981' }, { fill: '#ff385c' }, { fill: '#f59e0b' }].map((entry, index) => (
                     <Cell key={index} fill={entry.fill} />
                   ))}
                 </Bar>

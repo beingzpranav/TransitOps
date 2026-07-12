@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { VehicleStatus } from '@/app/generated/prisma/client';
 import { ServiceError } from './vehicle.service';
+import { sendEmail } from '@/lib/mail';
+import { createNotification } from '@/lib/notifications';
 
 // ─── Validation Schemas ────────────────────────────────────────────────────
 
@@ -34,7 +36,7 @@ export async function getMaintenance(id: string) {
 }
 
 export async function openMaintenance(data: z.infer<typeof createMaintenanceSchema>) {
-  return prisma.$transaction(async (tx) => {
+  const log = await prisma.$transaction(async (tx) => {
     const vehicle = await tx.vehicle.findUnique({ where: { id: data.vehicleId } });
     if (!vehicle) throw new ServiceError('Vehicle not found', 404);
 
@@ -45,7 +47,7 @@ export async function openMaintenance(data: z.infer<typeof createMaintenanceSche
       throw new ServiceError('Cannot open maintenance on a retired vehicle', 400);
     }
 
-    const [log] = await Promise.all([
+    const [res] = await Promise.all([
       tx.maintenanceLog.create({
         data: {
           vehicleId: data.vehicleId,
@@ -64,12 +66,43 @@ export async function openMaintenance(data: z.infer<typeof createMaintenanceSche
       }),
     ]);
 
-    return log;
+    // Trigger basic in-app notification
+    createNotification(
+      `Maintenance opened: Vehicle ${res.vehicle.registrationNumber} (${res.vehicle.name}) is now In Shop.`,
+      'Maintenance Opened'
+    );
+
+    return res;
   });
+
+  // Asynchronously trigger maintenance opened email to all respective managers/safety officers
+  try {
+    const targets = await prisma.user.findMany({
+      where: { role: { in: ['FLEET_MANAGER', 'SAFETY_OFFICER'] } },
+    });
+    for (const u of targets) {
+      sendEmail({
+        to: u.email,
+        subject: `Maintenance Opened: Vehicle ${log.vehicle.registrationNumber} is In Shop`,
+        templateName: 'maintenance_opened',
+        props: {
+          vehicleReg: log.vehicle.registrationNumber,
+          vehicleName: log.vehicle.name,
+          description: log.description,
+          cost: log.cost,
+        },
+        triggerEvent: 'Maintenance Opened',
+      });
+    }
+  } catch (err) {
+    console.error('Failed to send maintenance opened email:', err);
+  }
+
+  return log;
 }
 
 export async function closeMaintenance(id: string) {
-  return prisma.$transaction(async (tx) => {
+  const updatedRecord = await prisma.$transaction(async (tx) => {
     const record = await tx.maintenanceLog.findUnique({
       where: { id },
       include: { vehicle: true },
@@ -85,7 +118,7 @@ export async function closeMaintenance(id: string) {
         ? VehicleStatus.Retired
         : VehicleStatus.Available;
 
-    const [updatedRecord] = await Promise.all([
+    const [res] = await Promise.all([
       tx.maintenanceLog.update({
         where: { id },
         data: { isActive: false, dateClosed: new Date() },
@@ -99,6 +132,38 @@ export async function closeMaintenance(id: string) {
       }),
     ]);
 
-    return updatedRecord;
+    // Trigger basic in-app notification
+    createNotification(
+      `Maintenance closed: Vehicle ${res.vehicle.registrationNumber} (${res.vehicle.name}) is now ${newVehicleStatus.toLowerCase()}.`,
+      'Maintenance Closed'
+    );
+
+    return res;
   });
+
+  // Asynchronously trigger maintenance closed email to all respective managers/safety officers
+  try {
+    const targets = await prisma.user.findMany({
+      where: { role: { in: ['FLEET_MANAGER', 'SAFETY_OFFICER'] } },
+    });
+    for (const u of targets) {
+      sendEmail({
+        to: u.email,
+        subject: `Maintenance Closed: Vehicle ${updatedRecord.vehicle.registrationNumber} is Available`,
+        templateName: 'maintenance_closed',
+        props: {
+          vehicleReg: updatedRecord.vehicle.registrationNumber,
+          vehicleName: updatedRecord.vehicle.name,
+          description: updatedRecord.description,
+          cost: updatedRecord.cost,
+          dateOpened: updatedRecord.dateOpened.toISOString(),
+        },
+        triggerEvent: 'Maintenance Closed',
+      });
+    }
+  } catch (err) {
+    console.error('Failed to send maintenance closed email:', err);
+  }
+
+  return updatedRecord;
 }

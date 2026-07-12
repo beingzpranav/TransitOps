@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { DriverStatus } from '@/app/generated/prisma/client';
 import { ServiceError } from './vehicle.service';
+import { sendEmail } from '@/lib/mail';
+import { createNotification } from '@/lib/notifications';
 
 // ─── Validation Schemas ────────────────────────────────────────────────────
 
@@ -84,7 +86,7 @@ export async function updateDriver(
     );
   }
 
-  return prisma.driver.update({
+  const updatedDriver = await prisma.driver.update({
     where: { id },
     data: {
       ...(data.name !== undefined ? { name: data.name } : {}),
@@ -96,10 +98,99 @@ export async function updateDriver(
       ...(data.status !== undefined ? { status: data.status as DriverStatus } : {}),
     },
   });
+
+  if (data.status === 'Suspended' && driver.status !== DriverStatus.Suspended) {
+    try {
+      const driverEmail = `${updatedDriver.name.toLowerCase().replace(/\s+/g, '.')}@transitops-driver.com`;
+      // Send to driver
+      sendEmail({
+        to: driverEmail,
+        subject: `Compliance Alert: Driver Status Suspended — ${updatedDriver.name}`,
+        templateName: 'driver_suspended',
+        props: {
+          driverName: updatedDriver.name,
+          licenseNumber: updatedDriver.licenseNumber,
+          safetyScore: updatedDriver.safetyScore,
+        },
+        triggerEvent: 'Driver Suspended',
+      });
+
+      // Also send to all safety officers
+      const officers = await prisma.user.findMany({
+        where: { role: 'SAFETY_OFFICER' },
+      });
+      for (const s of officers) {
+        sendEmail({
+          to: s.email,
+          subject: `[Safety Alert] Driver Suspended: ${updatedDriver.name}`,
+          templateName: 'driver_suspended',
+          props: {
+            driverName: updatedDriver.name,
+            licenseNumber: updatedDriver.licenseNumber,
+            safetyScore: updatedDriver.safetyScore,
+          },
+          triggerEvent: 'Driver Suspended',
+        });
+      }
+      // Trigger basic in-app notification
+      createNotification(
+        `Driver ${updatedDriver.name} has been suspended.`,
+        'Driver Suspended'
+      );
+    } catch (err) {
+      console.error('Failed to send driver suspension email:', err);
+    }
+  }
+
+  return updatedDriver;
 }
 
 export async function suspendDriver(id: string) {
   const driver = await prisma.driver.findUnique({ where: { id } });
   if (!driver) throw new ServiceError('Driver not found', 404);
-  return prisma.driver.update({ where: { id }, data: { status: DriverStatus.Suspended } });
+  const updatedDriver = await prisma.driver.update({ where: { id }, data: { status: DriverStatus.Suspended } });
+
+  // Trigger suspension email to driver and safety officers
+  try {
+    const driverEmail = `${updatedDriver.name.toLowerCase().replace(/\s+/g, '.')}@transitops-driver.com`;
+    // Send to driver
+    sendEmail({
+      to: driverEmail,
+      subject: `Compliance Alert: Driver Status Suspended — ${updatedDriver.name}`,
+      templateName: 'driver_suspended',
+      props: {
+        driverName: updatedDriver.name,
+        licenseNumber: updatedDriver.licenseNumber,
+        safetyScore: updatedDriver.safetyScore,
+      },
+      triggerEvent: 'Driver Suspended',
+    });
+
+    // Also send to all safety officers
+    const officers = await prisma.user.findMany({
+      where: { role: 'SAFETY_OFFICER' },
+    });
+    for (const s of officers) {
+      sendEmail({
+        to: s.email,
+        subject: `[Safety Alert] Driver Suspended: ${updatedDriver.name}`,
+        templateName: 'driver_suspended',
+        props: {
+          driverName: updatedDriver.name,
+          licenseNumber: updatedDriver.licenseNumber,
+          safetyScore: updatedDriver.safetyScore,
+        },
+        triggerEvent: 'Driver Suspended',
+      });
+    }
+    // Trigger basic in-app notification
+    createNotification(
+      `Driver ${updatedDriver.name} has been suspended.`,
+      'Driver Suspended'
+    );
+  } catch (err) {
+    console.error('Failed to send driver suspension email:', err);
+  }
+
+  return updatedDriver;
 }

@@ -43,11 +43,8 @@ export function KpiCard({
             </div>
           )}
         </div>
-        <div className={cn(
-          'p-3 rounded-xl',
-          iconColor.replace('text-', 'bg-').replace('-500', '-50').replace('-600', '-50')
-        )}>
-          <Icon className={cn('w-6 h-6', iconColor)} />
+        <div className="p-3 rounded-full bg-[#f7f7f7] text-[#222222] flex items-center justify-center shrink-0">
+          <Icon className={cn('w-5 h-5', iconColor)} />
         </div>
       </div>
     </div>

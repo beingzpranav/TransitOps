@@ -110,6 +110,7 @@ export default function DriversPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [addOpen, setAddOpen] = useState(false);
   const [editDriver, setEditDriver] = useState<Driver | null>(null);
+  const [viewDriver, setViewDriver] = useState<Driver | null>(null);
   const [suspendId, setSuspendId] = useState<string | null>(null);
   const [formError, setFormError] = useState('');
   const [userRole, setUserRole] = useState<string>('');
@@ -169,7 +170,7 @@ export default function DriversPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Users className="w-6 h-6 text-emerald-500" />
+            <Users className="w-6 h-6 text-[#ff385c]" />
             Driver Management
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">{drivers.length} drivers registered</p>
@@ -240,7 +241,11 @@ export default function DriversPage() {
                   const expired = isExpired(d.licenseExpiry);
                   const expiringSoon = !expired && isExpiringSoon(d.licenseExpiry);
                   return (
-                    <tr key={d.id}>
+                    <tr
+                      key={d.id}
+                      className="cursor-pointer hover:bg-gray-50/50 transition-colors"
+                      onClick={() => setViewDriver(d)}
+                    >
                       <td>
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 text-xs font-bold">
@@ -252,7 +257,7 @@ export default function DriversPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="font-mono text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded w-fit">{d.licenseNumber}</td>
+                      <td className="font-mono text-xs text-[#ff385c] bg-[#ff385c]/10 px-2 py-0.5 rounded w-fit">{d.licenseNumber}</td>
                       <td className="text-gray-600">{d.licenseCategory}</td>
                       <td>
                         <div className="flex items-center gap-1.5">
@@ -273,7 +278,7 @@ export default function DriversPage() {
                       </td>
                       <td className="text-right">
                         {d.safetyScore != null ? (
-                          <span className={`font-semibold ${d.safetyScore >= 90 ? 'text-emerald-600' : d.safetyScore >= 75 ? 'text-blue-600' : 'text-amber-600'}`}>
+                          <span className={`font-semibold ${d.safetyScore >= 90 ? 'text-emerald-600' : d.safetyScore >= 75 ? 'text-[#ff385c]' : 'text-amber-600'}`}>
                             {d.safetyScore}
                           </span>
                         ) : '—'}
@@ -282,11 +287,11 @@ export default function DriversPage() {
                       {canManageDrivers && (
                         <td>
                           <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setFormError(''); setEditDriver(d); }} title="Edit" id={`edit-driver-${d.id}`}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setFormError(''); setEditDriver(d); }} title="Edit" id={`edit-driver-${d.id}`}>
                               <Edit className="w-3.5 h-3.5" />
                             </Button>
                             {d.status !== 'Suspended' && (
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-orange-400 hover:text-orange-600 hover:bg-orange-50" onClick={() => setSuspendId(d.id)} title="Suspend" id={`suspend-driver-${d.id}`}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-orange-400 hover:text-orange-600 hover:bg-orange-50" onClick={(e) => { e.stopPropagation(); setSuspendId(d.id); }} title="Suspend" id={`suspend-driver-${d.id}`}>
                                 <ShieldOff className="w-3.5 h-3.5" />
                               </Button>
                             )}
@@ -327,6 +332,67 @@ export default function DriversPage() {
         onConfirm={handleSuspend}
         loading={suspendDriver.isPending}
       />
+
+      {/* View Driver Details Dialog */}
+      <Dialog open={!!viewDriver} onOpenChange={(o) => !o && setViewDriver(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-[#ff385c]" />
+              Driver Profile: {viewDriver?.name}
+            </DialogTitle>
+          </DialogHeader>
+          {viewDriver && (
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center gap-4 border-b border-gray-100 pb-3">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 text-sm font-bold">
+                  {viewDriver.name.slice(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-gray-900">{viewDriver.name}</h3>
+                  <p className="text-xs text-gray-400">{viewDriver.contactNumber}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 border-b border-gray-100 pb-3">
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">License Number</span>
+                  <span className="text-sm font-mono font-semibold text-[#ff385c]">{viewDriver.licenseNumber}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">License Category</span>
+                  <span className="text-sm font-semibold text-gray-900">{viewDriver.licenseCategory}</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 border-b border-gray-100 pb-3">
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">License Expiration</span>
+                  <span className={`text-sm font-semibold ${isExpired(viewDriver.licenseExpiry) ? "text-red-600" : isExpiringSoon(viewDriver.licenseExpiry) ? "text-amber-600" : "text-gray-900"}`}>
+                    {new Date(viewDriver.licenseExpiry).toLocaleDateString()}
+                    {isExpired(viewDriver.licenseExpiry) && ' (Expired)'}
+                    {isExpiringSoon(viewDriver.licenseExpiry) && ' (Expiring soon)'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Current Status</span>
+                  <span className="block mt-0.5"><StatusBadge status={viewDriver.status} /></span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Safety Score</span>
+                  <span className={`text-sm font-bold ${viewDriver.safetyScore != null && viewDriver.safetyScore >= 90 ? 'text-emerald-600' : viewDriver.safetyScore != null && viewDriver.safetyScore >= 75 ? 'text-[#ff385c]' : 'text-amber-600'}`}>
+                    {viewDriver.safetyScore ?? '—'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Registered Date</span>
+                  <span className="text-sm font-semibold text-gray-900">{new Date(viewDriver.createdAt).toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

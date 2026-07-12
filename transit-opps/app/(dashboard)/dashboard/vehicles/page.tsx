@@ -144,6 +144,7 @@ export default function VehiclesPage() {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [addOpen, setAddOpen] = useState(false);
   const [editVehicle, setEditVehicle] = useState<Vehicle | null>(null);
+  const [viewVehicle, setViewVehicle] = useState<Vehicle | null>(null);
   const [retireId, setRetireId] = useState<string | null>(null);
   const [formError, setFormError] = useState('');
   const [userRole, setUserRole] = useState<string>('');
@@ -205,7 +206,7 @@ export default function VehiclesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Truck className="w-6 h-6 text-blue-500" />
+            <Truck className="w-6 h-6 text-[#ff385c]" />
             Vehicle Registry
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">{vehicles.length} vehicles registered</p>
@@ -276,9 +277,13 @@ export default function VehiclesPage() {
                 </tr>
               ) : (
                 filtered.map((v) => (
-                  <tr key={v.id}>
+                  <tr
+                    key={v.id}
+                    className="cursor-pointer hover:bg-gray-50/50 transition-colors"
+                    onClick={() => setViewVehicle(v)}
+                  >
                     <td>
-                      <span className="font-mono font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded text-xs">
+                      <span className="font-mono font-semibold text-[#ff385c] bg-[#ff385c]/10 px-2 py-0.5 rounded text-xs">
                         {v.registrationNumber}
                       </span>
                     </td>
@@ -298,7 +303,7 @@ export default function VehiclesPage() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => { setFormError(''); setEditVehicle(v); }}
+                            onClick={(e) => { e.stopPropagation(); setFormError(''); setEditVehicle(v); }}
                             title="Edit"
                             id={`edit-vehicle-${v.id}`}
                           >
@@ -309,7 +314,7 @@ export default function VehiclesPage() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-red-400 hover:text-red-600 hover:bg-red-50"
-                              onClick={() => setRetireId(v.id)}
+                              onClick={(e) => { e.stopPropagation(); setRetireId(v.id); }}
                               title="Retire"
                               id={`retire-vehicle-${v.id}`}
                             >
@@ -369,6 +374,66 @@ export default function VehiclesPage() {
         onConfirm={handleRetire}
         loading={retireVehicle.isPending}
       />
+
+      {/* View Vehicle Details Dialog */}
+      <Dialog open={!!viewVehicle} onOpenChange={(o) => !o && setViewVehicle(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Truck className="w-5 h-5 text-[#ff385c]" />
+              Vehicle Details: {viewVehicle?.registrationNumber}
+            </DialogTitle>
+          </DialogHeader>
+          {viewVehicle && (
+            <div className="space-y-4 pt-2">
+              <div className="grid grid-cols-2 gap-4 border-b border-gray-100 pb-3">
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Vehicle Name</span>
+                  <span className="text-sm font-semibold text-gray-900">{viewVehicle.name}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Registration Number</span>
+                  <span className="text-sm font-mono font-semibold text-[#ff385c]">{viewVehicle.registrationNumber}</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 border-b border-gray-100 pb-3">
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Vehicle Type</span>
+                  <span className="text-sm font-semibold text-gray-900">{viewVehicle.type}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Current Status</span>
+                  <span className="block mt-0.5"><StatusBadge status={viewVehicle.status} /></span>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4 border-b border-gray-100 pb-3">
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Max Load Capacity</span>
+                  <span className="text-sm font-semibold text-gray-900">{viewVehicle.maxLoadCapacity.toLocaleString()} kg</span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Odometer</span>
+                  <span className="text-sm font-semibold text-gray-900">{viewVehicle.odometer.toLocaleString()} km</span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Acquisition Cost</span>
+                  <span className="text-sm font-semibold text-gray-900">${viewVehicle.acquisitionCost.toLocaleString()}</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Region</span>
+                  <span className="text-sm font-semibold text-gray-900">{viewVehicle.region ?? '—'}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block font-medium">Registered Date</span>
+                  <span className="text-sm font-semibold text-gray-900">{new Date(viewVehicle.createdAt).toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
