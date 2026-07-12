@@ -144,3 +144,11 @@ model Expense {
   vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
   createdAt DateTime @default(now())
 }
+
+model SystemSetting {
+  id           String   @id @default("default")
+  depotName    String   @default("Gandhinagar Depot GJ4")
+  currency     String   @default("INR (Rs)")
+  distanceUnit String   @default("Kilometers")
+  updatedAt    DateTime @updatedAt
+}

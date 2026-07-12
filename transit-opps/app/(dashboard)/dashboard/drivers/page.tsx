@@ -60,7 +60,16 @@ function DriverForm({
         </div>
         <div>
           <Label htmlFor="contact" className="form-label">Contact Number *</Label>
-          <Input id="contact" value={form.contactNumber} onChange={(e) => setForm({ ...form, contactNumber: e.target.value })} placeholder="+1-555-0101" required className="mt-1" />
+          <Input
+            id="contact"
+            value={form.contactNumber}
+            onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
+            placeholder="+91 98765 43210"
+            pattern="^\+91.*"
+            title="Phone number must start with +91"
+            required
+            className="mt-1"
+          />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">

@@ -143,7 +143,7 @@ async function main() {
         licenseNumber: 'DL-2024-1001',
         licenseCategory: 'Class A CDL',
         licenseExpiry: new Date('2027-06-30'),
-        contactNumber: '+1-555-0101',
+        contactNumber: '+91 98765 43210',
         safetyScore: 94,
         status: DriverStatus.Available,
       },
@@ -156,7 +156,7 @@ async function main() {
         licenseNumber: 'DL-2024-1002',
         licenseCategory: 'Class B',
         licenseExpiry: new Date('2026-12-15'),
-        contactNumber: '+1-555-0102',
+        contactNumber: '+91 98765 43211',
         safetyScore: 88,
         status: DriverStatus.Available,
       },
@@ -169,7 +169,7 @@ async function main() {
         licenseNumber: 'DL-2023-0889',
         licenseCategory: 'Class A CDL',
         licenseExpiry: new Date('2025-03-01'),
-        contactNumber: '+1-555-0103',
+        contactNumber: '+91 98765 43212',
         safetyScore: 72,
         status: DriverStatus.OffDuty,
       },
@@ -182,7 +182,7 @@ async function main() {
         licenseNumber: 'DL-2022-0445',
         licenseCategory: 'Class B',
         licenseExpiry: new Date('2028-09-20'),
-        contactNumber: '+1-555-0104',
+        contactNumber: '+91 98765 43213',
         safetyScore: 96,
         status: DriverStatus.Available,
       },
@@ -285,6 +285,20 @@ async function main() {
   });
 
   console.log('✅ Expenses created');
+
+  // ─── System Settings ──────────────────────────────────────────────────────
+  await prisma.systemSetting.upsert({
+    where: { id: 'default' },
+    update: {},
+    create: {
+      id: 'default',
+      depotName: 'Gandhinagar Depot GJ4',
+      currency: 'INR (Rs)',
+      distanceUnit: 'Kilometers',
+    },
+  });
+
+  console.log('✅ System settings created');
   console.log('');
   console.log('🎉 Seed complete! Demo credentials (all passwords: Password123!):');
   console.log('  Fleet Manager:     manager@transitops.com');
