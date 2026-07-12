@@ -17,6 +17,8 @@ import {
   ChevronRight,
   Mail,
   Bell,
+  Settings,
+  Search,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNotifications, useClearNotifications } from '@/hooks/useNotifications';
@@ -52,6 +54,7 @@ function getNavItems(role: string) {
     { href: '/dashboard/maintenance', icon: Wrench, label: 'Maintenance', roles: ['FLEET_MANAGER', 'DISPATCHER', 'SAFETY_OFFICER', 'FINANCIAL_ANALYST'] },
     { href: '/dashboard/fuel-expenses', icon: Fuel, label: 'Fuel & Expenses', roles: ['FLEET_MANAGER', 'DISPATCHER', 'FINANCIAL_ANALYST'] },
     { href: '/dashboard/reports', icon: BarChart3, label: 'Reports', roles: ['FLEET_MANAGER', 'FINANCIAL_ANALYST', 'SAFETY_OFFICER'] },
+    { href: '/dashboard/settings', icon: Settings, label: 'Settings', roles: ['FLEET_MANAGER', 'DISPATCHER', 'SAFETY_OFFICER', 'FINANCIAL_ANALYST'] },
   ];
   return all.filter((item) => item.roles.includes(role));
 }
@@ -227,6 +230,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Right Header Actions */}
           <div className="flex items-center gap-4 relative">
+            {/* Search Bar matching Excalidraw */}
+            <div className="hidden md:flex items-center gap-2 bg-[#f7f7f7] border border-[#dddddd] rounded-lg px-2.5 py-1.5 w-60">
+              <Search className="w-4 h-4 text-[#6a6a6a]" />
+              <input
+                type="text"
+                placeholder="Search..."
+                className="bg-transparent text-xs text-[#222222] outline-none w-full placeholder:text-[#6a6a6a]"
+              />
+            </div>
+
+            {/* Notification Bell */}
             <button
               onClick={() => setBellOpen(!bellOpen)}
               className="relative p-2 rounded-full hover:bg-[#f7f7f7] text-[#222222] transition-colors cursor-pointer"
@@ -240,6 +254,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </span>
               )}
             </button>
+
+            {/* User Profile Badge matching Excalidraw */}
+            <div className="flex items-center gap-2 border-l border-[#dddddd] pl-4">
+              <span className="text-xs font-semibold text-[#222222] hidden sm:inline">{user.name}</span>
+              <span className={cn(
+                'text-[10px] font-bold px-2 py-0.5 rounded-full text-white uppercase tracking-wider',
+                roleColors[user.role] ?? 'bg-gray-500'
+              )}>
+                {roleLabels[user.role] ?? user.role}
+              </span>
+              <div className={cn(
+                'w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0 shadow-sm border border-white',
+                roleColors[user.role] ?? 'bg-gray-500'
+              )}>
+                {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+              </div>
+            </div>
 
             {bellOpen && (
               <>
