@@ -42,9 +42,10 @@ export class AuthError extends Error {
   }
 }
 
-export function handleAuthError(err: unknown): Response {
+export function handleAuthError(err: unknown): Response | null {
   if (err instanceof AuthError) {
     return Response.json({ error: err.message }, { status: err.statusCode });
   }
-  return Response.json({ error: 'Internal server error' }, { status: 500 });
+  return null;
 }
+

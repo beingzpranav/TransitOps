@@ -5,7 +5,7 @@ import { handleServiceError } from '@/services/vehicle.service';
 
 export async function GET(req: NextRequest) {
   try {
-    requireAuth(req);
+    requireRole(req, UserRole.FLEET_MANAGER, UserRole.FINANCIAL_ANALYST);
     const { searchParams } = new URL(req.url);
     const vehicleId = searchParams.get('vehicleId') ?? undefined;
     const expenses = await listExpenses({ vehicleId });

@@ -10,7 +10,7 @@ import { DriverStatus } from '@/app/generated/prisma/client';
 
 export async function GET(req: NextRequest) {
   try {
-    requireAuth(req);
+    requireRole(req, UserRole.FLEET_MANAGER, UserRole.SAFETY_OFFICER);
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status') as DriverStatus | null;
     const licenseCategory = searchParams.get('licenseCategory');

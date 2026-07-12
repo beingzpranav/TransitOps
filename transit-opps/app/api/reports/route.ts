@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { requireAuth, handleAuthError } from '@/lib/rbac';
+import { requireRole, UserRole, handleAuthError } from '@/lib/rbac';
 import {
   getFuelEfficiency,
   getOperationalCost,
@@ -11,7 +11,7 @@ import { Parser } from 'json2csv';
 
 export async function GET(req: NextRequest) {
   try {
-    requireAuth(req);
+    requireRole(req, UserRole.FLEET_MANAGER, UserRole.FINANCIAL_ANALYST);
     const { searchParams } = new URL(req.url);
     const type = searchParams.get('type') ?? 'fuel_efficiency';
     const from = searchParams.get('from') ?? undefined;

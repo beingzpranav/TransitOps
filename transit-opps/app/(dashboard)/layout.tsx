@@ -95,11 +95,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (notifications.length > prevNotificationsCount) {
       const diff = notifications.length - prevNotificationsCount;
       const newItems = notifications.slice(0, diff); // newest items are at the front (unshifted in service)
-      
+
       newItems.forEach((item) => {
         const id = Math.random().toString(36).substring(2, 9);
         setToasts((prev) => [...prev, { id, message: item.message, triggerEvent: item.triggerEvent }]);
-        
+
         // Auto remove toast after 4.5 seconds
         setTimeout(() => {
           setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -136,7 +136,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-[#dddddd]">
         <div className="p-2 rounded-xl bg-[#ff385c]/10">
-          <Truck className="w-5 h-5 text-[#ff385c]" />
+          <img src="Transit Ops Logo.png" alt="Logo" className="w-7 h-7" height={50} width={50} />
         </div>
         <div>
           <p className="font-bold text-[#222222] text-sm">TransitOps</p>
@@ -245,7 +245,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <>
                 {/* Backdrop to dismiss */}
                 <div className="fixed inset-0 z-30" onClick={() => setBellOpen(false)} />
-                
+
                 {/* Dropdown Card */}
                 <div className="absolute right-0 top-12 w-80 bg-white border border-[#dddddd] shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-md overflow-hidden z-40 animate-fade-in flex flex-col max-h-96">
                   <div className="px-4 py-3 border-b border-[#dddddd] flex items-center justify-between bg-[#f7f7f7]">
@@ -262,7 +262,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       </button>
                     )}
                   </div>
-                  
+
                   <div className="flex-1 overflow-y-auto divide-y divide-[#dddddd]">
                     {notifications.length === 0 ? (
                       <div className="p-6 text-center text-xs text-[#6a6a6a]">

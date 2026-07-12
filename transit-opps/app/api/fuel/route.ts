@@ -5,7 +5,7 @@ import { handleServiceError } from '@/services/vehicle.service';
 
 export async function GET(req: NextRequest) {
   try {
-    requireAuth(req);
+    requireRole(req, UserRole.FLEET_MANAGER, UserRole.FINANCIAL_ANALYST);
     const { searchParams } = new URL(req.url);
     const vehicleId = searchParams.get('vehicleId') ?? undefined;
     const tripId = searchParams.get('tripId') ?? undefined;
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    requireRole(req, UserRole.FLEET_MANAGER, UserRole.DISPATCHER);
+    requireRole(req, UserRole.FLEET_MANAGER, UserRole.FINANCIAL_ANALYST);
     const body = await req.json();
     const parsed = createFuelLogSchema.safeParse(body);
     if (!parsed.success) {
