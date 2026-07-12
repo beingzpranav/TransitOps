@@ -23,19 +23,11 @@ interface GeocodeSuggestion {
 function MiniETA({ actualStartTime, plannedDistance }: { actualStartTime?: string | null; plannedDistance: number }) {
   const [etaText, setEtaText] = useState<string>('');
   useEffect(() => {
-<<<<<<< Updated upstream
-    if (!actualStartTime) return;
-    const startTimeStr = actualStartTime;
-
-    function update() {
-      const elapsedMs = Date.now() - new Date(startTimeStr).getTime();
-=======
     const startTime = actualStartTime;
     if (!startTime) return;
 
     function update() {
       const elapsedMs = Date.now() - new Date(startTime!).getTime();
->>>>>>> Stashed changes
       const elapsedH = elapsedMs / (1000 * 60 * 60);
       const covered = elapsedH * 60; // Assumed 60 km/h average speed
       const remaining = plannedDistance - covered;
